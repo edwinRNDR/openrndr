@@ -181,7 +181,9 @@ interface ColorBuffer {
     /**
      * resolves contents to a non-multisampled color buffer
      */
-    @Deprecated("functionality is merged into copyTo")
+    @Deprecated("functionality is merged into copyTo",
+        ReplaceWith("copyTo(target, fromLevel, toLevel)")
+    )
     fun resolveTo(target: ColorBuffer, fromLevel: Int = 0, toLevel: Int = 0) {
         copyTo(target, fromLevel, toLevel)
     }
@@ -302,14 +304,14 @@ interface ColorBuffer {
     companion object {
         /**
          * create a [ColorBuffer] from a [File] containing a formatted image
-         * @param file a [File] containing a formatted image
+         * @param url the location of a formatted image
          * @param formatHint an optional [ImageFileFormat] hint, default is null
          * @param session the [Session] under which the [ColorBuffer] should be created, default is [Session.active]
          * @see loadImage
          */
         fun fromUrl(url: String, formatHint: ImageFileFormat? = null, session: Session? = Session.active): ColorBuffer {
-            val colorBuffer = Driver.instance.createColorBufferFromUrl(url, formatHint, session)
-            return colorBuffer
+            return Driver.instance.createColorBufferFromUrl(
+                url, formatHint, session)
         }
 
         /**
@@ -320,8 +322,8 @@ interface ColorBuffer {
          * @see loadImage
          */
         fun fromFile(file: File, formatHint: ImageFileFormat? = null, session: Session? = Session.active): ColorBuffer {
-            val colorBuffer = Driver.instance.createColorBufferFromFile(file.absolutePath, formatHint = formatHint, session)
-            return colorBuffer
+            return Driver.instance.createColorBufferFromFile(file.absolutePath,
+                formatHint = formatHint, session)
         }
 
         /**
@@ -332,8 +334,8 @@ interface ColorBuffer {
          * @see loadImage
          */
         fun fromFile(filename: String, formatHint: ImageFileFormat?, session: Session? = Session.active): ColorBuffer {
-            val colorBuffer = Driver.instance.createColorBufferFromFile(filename, formatHint = formatHint, session)
-            return colorBuffer
+            return Driver.instance.createColorBufferFromFile(filename,
+                formatHint = formatHint, session)
         }
 
         /**
@@ -344,20 +346,19 @@ interface ColorBuffer {
          */
         @Suppress("UNUSED_PARAMETER")
         fun fromStream(stream: InputStream, formatHint: ImageFileFormat? = null, session: Session? = Session.active): ColorBuffer {
-            val colorBuffer = Driver.instance.createColorBufferFromStream(
+            return Driver.instance.createColorBufferFromStream(
                     stream,
                     formatHint = formatHint,
                     session = session
             )
-            return colorBuffer
         }
 
         /**
          * create a [ColorBuffer] from a [ByteArray] containing a formatted image (meaning any of the formats in [ImageFileFormat])
          * @param bytes a [ByteArray] containing a formatted image
          * @param offset offset used for reading from [bytes], default is 0
-         * @param length number of bytes to be used from [bytes], default is [bytes.size]
-         * @param formatHint an optiononal [ImageFileFormat] hint, default is nuull
+         * @param length number of bytes to be used from [bytes], default is bytes.size
+         * @param formatHint an optional [ImageFileFormat] hint, default is null
          */
         @Suppress("UNUSED_PARAMETER")
         fun fromArray(
@@ -367,12 +368,11 @@ interface ColorBuffer {
                 formatHint: ImageFileFormat?,
                 session: Session? = Session.active
         ): ColorBuffer {
-            val colorBuffer = Driver.instance.createColorBufferFromArray(bytes,
+            return Driver.instance.createColorBufferFromArray(bytes,
                     offset,
                     length,
                     formatHint = formatHint,
                     session = session)
-            return colorBuffer
         }
 
         /**
@@ -382,8 +382,8 @@ interface ColorBuffer {
          * @param session the [Session] under which this [ColorBuffer] should be created, default is [Session.active]
          */
         fun fromBuffer(bytes: ByteBuffer, formatHint: ImageFileFormat?, session: Session? = Session.active): ColorBuffer {
-            val colorBuffer = Driver.instance.createColorBufferFromBuffer(bytes, session = session)
-            return colorBuffer
+            return Driver.instance.createColorBufferFromBuffer(
+                bytes, session = session)
         }
     }
 }

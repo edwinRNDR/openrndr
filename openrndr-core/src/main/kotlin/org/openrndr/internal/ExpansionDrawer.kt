@@ -1,7 +1,6 @@
 package org.openrndr.internal
 
 import org.openrndr.draw.*
-import org.openrndr.math.Vector3
 import org.openrndr.math.Vector4
 
 internal data class Command(val vertexBuffer: VertexBuffer, val type: ExpansionType, val vertexOffset: Int, val vertexCount: Int,
@@ -152,10 +151,10 @@ internal class ExpansionDrawer {
 
         shader.uniform("strokeFillFactor", 1.0)
 
-        val minX = commands.minBy { it.minX }?.minX ?: error("no commands")
-        val minY = commands.minBy { it.minY }?.minY ?: error("no commands")
-        val maxX = commands.maxBy { it.maxX }?.maxX ?: error("no commands")
-        val maxY = commands.maxBy { it.maxY }?.maxY ?: error("no commands")
+        val minX = commands.minByOrNull { it.minX }?.minX ?: error("no commands")
+        val minY = commands.minByOrNull { it.minY }?.minY ?: error("no commands")
+        val maxX = commands.maxByOrNull { it.maxX }?.maxX ?: error("no commands")
+        val maxY = commands.maxByOrNull { it.maxY }?.maxY ?: error("no commands")
 
         val command = commands[0]
         shader.uniform("bounds", Vector4(command.minX, command.minY, command.maxX - command.minX, command.maxY - command.minY))

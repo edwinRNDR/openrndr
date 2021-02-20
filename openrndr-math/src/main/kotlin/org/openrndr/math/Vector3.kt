@@ -79,7 +79,7 @@ data class Vector3(val x: Double, val y: Double, val z: Double) : Serializable, 
     infix fun projectedOn(v: Vector3) = (this dot v) / (v dot v) * v
 
     /** The Euclidean length of the vector. */
-    val length: Double get() = Math.sqrt(x * x + y * y + z * z)
+    val length: Double get() = sqrt(x * x + y * y + z * z)
 
     /** The squared Euclidean length of the vector. */
     val squaredLength get() = x * x + y * y + z * z

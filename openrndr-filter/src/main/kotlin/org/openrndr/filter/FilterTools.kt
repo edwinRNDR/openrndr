@@ -1,7 +1,6 @@
 package org.openrndr.filter
 
 import org.openrndr.resourceUrl
-import java.net.URL
 
 internal class FilterTools
 

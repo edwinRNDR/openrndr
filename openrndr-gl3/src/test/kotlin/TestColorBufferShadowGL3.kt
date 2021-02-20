@@ -1,4 +1,4 @@
-import org.amshove.kluent.`should equal`
+import org.amshove.kluent.`should be equal to`
 import org.openrndr.Configuration
 import org.openrndr.Program
 import org.openrndr.color.ColorRGBa
@@ -65,17 +65,17 @@ object TestColorBufferShadowGL3 : Spek({
                 colorBuffer(cb)
             }
             program.drawer.withTarget(rt) {
-                background(ColorRGBa(127/256.0, 0.0, 0.0, 1.0))
+                clear(ColorRGBa(127/256.0, 0.0, 0.0, 1.0))
             }
             cb.shadow.download()
             it("should be able to read all pixels correctly ") {
                 for (y in 0 until cb.height) {
                     for (x in 0 until cb.width) {
                         val c = cb.shadow[x,y]
-                        c.r `should equal` 127/255.0
-                        c.g `should equal` 0.0
-                        c.b `should equal` 0.0
-                        c.a `should equal` 1.0
+                        c.r `should be equal to` 127/255.0
+                        c.g `should be equal to` 0.0
+                        c.b `should be equal to` 0.0
+                        c.a `should be equal to` 1.0
                     }
                 }
             }

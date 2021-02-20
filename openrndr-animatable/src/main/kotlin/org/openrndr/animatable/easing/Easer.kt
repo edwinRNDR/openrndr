@@ -84,7 +84,7 @@ class CubicIn: Easer {
 
 class CubicOut: Easer {
     override fun ease(t: Double, b: Double, c: Double, d: Double): Double {
-        val td = t / d - 1.0;
+        val td = t / d - 1.0
         return c * (td * td *td  + 1) + b
     }
 

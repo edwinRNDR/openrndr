@@ -1,12 +1,8 @@
 package org.openrndr.math
 
-import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should be greater than`
 import org.openrndr.application
 import org.openrndr.resourceUrl
-import org.openrndr.shape.ShapeTopology
-import org.openrndr.shape.Winding
-import org.openrndr.shape.triangulate
 import org.openrndr.svg.loadSVG
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe

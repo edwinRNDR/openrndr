@@ -18,7 +18,7 @@ fun installUncaughtExceptionHandler() {
     if (Platform.type != PlatformType.WINDOWS) {
         System.err.print(color(0x7f, 0x7f, 0x7f))
         if (System.getProperty("org.openrndr.exceptions") != "JVM") {
-            Thread.setDefaultUncaughtExceptionHandler(SanitizingUncaughtExceptionHandler());
+            Thread.setDefaultUncaughtExceptionHandler(SanitizingUncaughtExceptionHandler())
         }
     }
 }

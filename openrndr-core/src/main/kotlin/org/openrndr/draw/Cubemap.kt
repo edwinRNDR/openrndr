@@ -24,13 +24,11 @@ interface Cubemap {
 
     companion object {
         fun create(width: Int, format: ColorFormat = ColorFormat.RGBa, type: ColorType = ColorType.UINT8, levels: Int = -1, session: Session? = Session.active): Cubemap {
-            val cubemap = Driver.instance.createCubemap(width, format, type, levels, session)
-            return cubemap
+            return Driver.instance.createCubemap(width, format, type, levels, session)
         }
 
         fun fromUrl(url: String, formatHint: ImageFileFormat?, session: Session? = Session.active): Cubemap {
-            val cubemap = Driver.instance.createCubemapFromUrls(listOf(url), formatHint, session)
-            return cubemap
+            return Driver.instance.createCubemapFromUrls(listOf(url), formatHint, session)
         }
 
         fun fromUrls(urls: List<String>, formatHint: ImageFileFormat?, session: Session? = Session.active): Cubemap {
@@ -67,8 +65,7 @@ interface Cubemap {
 }
 
 fun cubemap(width: Int, format: ColorFormat = ColorFormat.RGBa, type: ColorType = ColorType.UINT8, levels: Int = 1, session: Session? = Session.active): Cubemap {
-    val cubemap = Cubemap.create(width, format, type, levels, session)
-    return cubemap
+    return Cubemap.create(width, format, type, levels, session)
 }
 
 fun loadCubemap(fileOrUrl: String, formatHint: ImageFileFormat?, session: Session? = Session.active): Cubemap {

@@ -6,6 +6,7 @@ import org.openrndr.events.Event
 import org.openrndr.math.LinearType
 import java.lang.reflect.Field
 import java.util.*
+import kotlin.math.max
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KMutableProperty0
 
@@ -731,7 +732,7 @@ open class Animatable {
             }
         }
 
-        return Math.max(0L, Math.max(latest, createAtTimeInNs) - lastTimeInNs)
+        return max(0L, max(latest, createAtTimeInNs) - lastTimeInNs)
     }
 
     /**

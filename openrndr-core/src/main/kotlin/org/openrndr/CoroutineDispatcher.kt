@@ -48,7 +48,7 @@ class Dispatcher : MainCoroutineDispatcher(), Delay {
         val time = System.currentTimeMillis()
         synchronized(toRunAfter) {
             val toDo = toRunAfter.filter { it.first <= time }
-            if (!toDo.isEmpty()) {
+            if (toDo.isNotEmpty()) {
                 toRunAfter.removeAll { it.first <= time }
             }
             for ((_, runnable) in toDo) {

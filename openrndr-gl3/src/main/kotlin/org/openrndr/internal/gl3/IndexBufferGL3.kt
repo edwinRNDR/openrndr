@@ -32,7 +32,7 @@ class IndexBufferGL3(val buffer: Int, override val indexCount: Int, override val
         if (isDestroyed) {
             throw IllegalStateException("buffer is destroyed")
         }
-        logger.trace { "binding vertex buffer ${buffer}" }
+        logger.trace { "binding vertex buffer $buffer" }
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer)
         debugGLErrors()
     }

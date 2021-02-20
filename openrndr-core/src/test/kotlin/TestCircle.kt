@@ -1,7 +1,6 @@
 import org.amshove.kluent.`should be equal to`
 import org.openrndr.math.YPolarity
 import org.openrndr.shape.Circle
-import org.openrndr.shape.Rectangle
 import org.openrndr.shape.Winding
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe

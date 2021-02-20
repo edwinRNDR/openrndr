@@ -1,6 +1,5 @@
 package org.openrndr.shape
 
-import org.openrndr.math.Vector2
 import org.openrndr.math.Vector3
 
 @Suppress("unused")

@@ -107,7 +107,6 @@ data class ColorRGBa(val r: Double, val g: Double, val b: Double, val a: Double 
         /**
          * Create a ColorRGBa object from a [Vector4]
          * @param vector input vector, `[x, y, z, w]` is mapped to `[r, g, b, a]`
-         * @param alpha optional alpha value, default is 1.0
          */
         fun fromVector(vector: Vector4): ColorRGBa {
             return ColorRGBa(vector.x, vector.y, vector.z, vector.w)

@@ -225,8 +225,8 @@ internal class BezierCubicSampler2D {
     }
 
     companion object {
-        private val colinearityEpsilon = 1e-30
-        private val angleToleranceEpsilon = 0.01
+        private const val colinearityEpsilon = 1e-30
+        private const val angleToleranceEpsilon = 0.01
 
         private fun squareDistance(x: Double, y: Double, x1: Double, y1: Double): Double {
             val dx = x1 - x

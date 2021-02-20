@@ -92,9 +92,9 @@ internal class Decoder(private val statistics: VideoStatistics,
                 } while (next != AV_HWDEVICE_TYPE_NONE)
 
                 hwType = (foundHW.map { Pair(it, preferredHW.indexOf(it)) })
-                        .filter { it.second >= 0 }
-                        .maxBy { it.second }
-                        ?.first ?: AV_HWDEVICE_TYPE_NONE
+                    .filter { it.second >= 0 }
+                    .maxByOrNull { it.second }
+                    ?.first ?: AV_HWDEVICE_TYPE_NONE
 
                 if (hwType != AV_HWDEVICE_TYPE_NONE) {
                     val hwContextPtr = PointerPointer<AVHWDeviceContext>(1)

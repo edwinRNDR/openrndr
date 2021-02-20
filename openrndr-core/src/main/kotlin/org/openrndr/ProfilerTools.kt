@@ -40,7 +40,7 @@ inline fun <T> measure(name: String, crossinline f: () -> T): T {
 fun report() {
     val profilingEnd = System.nanoTime()
     val profilingRuntime = (profilingEnd - profilingStart)/1E6
-    println("total runtime: ${profilingRuntime}")
+    println("total runtime: $profilingRuntime")
     println("--------------------------------------")
     for (name in measuredTime.keys) {
         val timeMS = measuredTime[name]!!/1E6

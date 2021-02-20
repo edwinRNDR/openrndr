@@ -28,8 +28,7 @@ class AnimationKey(val variable: String, val target: Double, val duration: Long,
      * @return the easing mode used
      */
     /**
-     * sets the easing mode for the animation
-     * @param easer the easing mode
+     * sets the [Easing] mode for the animation
      */
     var easing = Easing.None.easer
 

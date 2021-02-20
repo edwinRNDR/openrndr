@@ -7,6 +7,8 @@ import org.openrndr.math.Vector4
 import org.openrndr.math.closeTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import kotlin.math.atan2
+import kotlin.math.tan
 
 object TestTransforms : Spek({
 
@@ -72,7 +74,7 @@ object TestTransforms : Spek({
 
             val p = perspective(fovY, aspectRatio, near, far)
 
-            val top = near * Math.tan(Math.toRadians(fovY) / 2)
+            val top = near * tan(Math.toRadians(fovY) / 2)
             val bottom = -top
             val right = top * aspectRatio
             val left = -right
@@ -90,7 +92,7 @@ object TestTransforms : Spek({
             val right = 8.0
             val f = frustum(left, right, bottom, top, near, far)
 
-            val fovy = 2 * Math.toDegrees(Math.atan2(top, near))
+            val fovy = 2 * Math.toDegrees(atan2(top, near))
             val aspect = right / top
             val p = perspective(fovy, aspect, near, far)
 
@@ -110,7 +112,7 @@ object TestTransforms : Spek({
             val offset = Vector2(9.0, 4.5)
             val pA = perspective(fovY, aspectRatio, near, far, offset.x, offset.y)
 
-            val top = (near * Math.tan(Math.toRadians(fovY) / 2))
+            val top = (near * tan(Math.toRadians(fovY) / 2))
             val bottom = -top
             val right = top * aspectRatio
             val left = -right

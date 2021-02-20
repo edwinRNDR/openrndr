@@ -3,6 +3,9 @@ package org.openrndr.math.transforms
 import org.openrndr.math.Matrix44
 import org.openrndr.math.Vector3
 import org.openrndr.math.Vector4
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.tan
 
 /**
  *  Creates an perspective projection matrix
@@ -21,8 +24,8 @@ fun perspective(fovY: Double, aspectRatio: Double, zNear: Double, zFar: Double):
     val y = Math.toRadians(fovY)
 
     return Matrix44(
-            1.0 / (aspectRatio * Math.tan(0.5 * y)), 0.0, 0.0, 0.0,
-            0.0, 1.0 / Math.tan(0.5 * y), 0.0, 0.0,
+            1.0 / (aspectRatio * tan(0.5 * y)), 0.0, 0.0, 0.0,
+            0.0, 1.0 / tan(0.5 * y), 0.0, 0.0,
             0.0, 0.0, (zFar + zNear) / (zNear - zFar), 2 * zFar * zNear / (zNear - zFar),
             0.0, 0.0, -1.0, 0.0)
 }
@@ -43,8 +46,8 @@ fun perspective(fovY: Double, aspectRatio: Double, zNear: Double): Matrix44 {
     val y = Math.toRadians(fovY)
 
     return Matrix44(
-            1.0 / (aspectRatio * Math.tan(0.5 * y)), 0.0, 0.0, 0.0,
-            0.0, 1.0 / Math.tan(0.5 * y), 0.0, 0.0,
+            1.0 / (aspectRatio * tan(0.5 * y)), 0.0, 0.0, 0.0,
+            0.0, 1.0 / tan(0.5 * y), 0.0, 0.0,
             0.0, 0.0, -1.0, -2.0 * zNear,
             0.0, 0.0, -1.0, 0.0)
 }
@@ -61,7 +64,7 @@ fun perspective(fovY: Double, aspectRatio: Double, zNear: Double): Matrix44 {
  */
 fun perspective(fovY: Double, aspectRatio: Double, zNear: Double, zFar: Double, xOffset: Double, yOffset: Double): Matrix44 {
 
-    val fW = Math.tan(Math.toRadians(fovY) / 2) * zNear
+    val fW = tan(Math.toRadians(fovY) / 2) * zNear
     val fH = fW * aspectRatio
 
     return frustum(-fH + xOffset, fH + xOffset, -fW + yOffset, fW + yOffset, zNear, zFar)
@@ -78,7 +81,7 @@ fun perspective(fovY: Double, aspectRatio: Double, zNear: Double, zFar: Double, 
  */
 fun perspectiveHorizontal(fovY: Double, aspectRatio: Double, zNear: Double, zFar: Double, xOffset: Double, yOffset: Double): Matrix44 {
 
-    val fW = Math.tan(Math.toRadians(fovY) / 2) * zNear
+    val fW = tan(Math.toRadians(fovY) / 2) * zNear
     val fH = fW / aspectRatio
 
     return frustum(-fW + xOffset, fW + xOffset, -fH + yOffset, fH + yOffset, zNear, zFar)
@@ -177,8 +180,8 @@ fun lookAt(eye: Vector3, target: Vector3, up: Vector3 = Vector3.UNIT_Y): Matrix4
 fun Matrix44.Companion.rotate(axis: Vector3, angle: Double): Matrix44 {
 
     val r = Math.toRadians(angle)
-    val cosa = Math.cos(r)
-    val sina = Math.sin(r)
+    val cosa = cos(r)
+    val sina = sin(r)
     val _axis = axis.normalized
 
     return Matrix44(
@@ -213,8 +216,8 @@ fun Matrix44.Companion.rotate(axis: Vector3, angle: Double): Matrix44 {
 fun Matrix44.Companion.rotateX(angle: Double): Matrix44 {
     val r = Math.toRadians(angle)
 
-    val cr = Math.cos(r)
-    val sr = Math.sin(r)
+    val cr = cos(r)
+    val sr = sin(r)
     return Matrix44(
             1.0, 0.0, 0.0, 0.0,
             0.0, cr, -sr, 0.0,
@@ -231,8 +234,8 @@ fun Matrix44.Companion.rotateX(angle: Double): Matrix44 {
 fun Matrix44.Companion.rotateY(angle: Double): Matrix44 {
     val r = Math.toRadians(angle)
 
-    val cr = Math.cos(r)
-    val sr = Math.sin(r)
+    val cr = cos(r)
+    val sr = sin(r)
     return Matrix44(
             cr, 0.0, sr, 0.0,
             0.0, 1.0, 0.0, 0.0,
@@ -247,8 +250,8 @@ fun Matrix44.Companion.rotateY(angle: Double): Matrix44 {
  */
 fun Matrix44.Companion.rotateZ(angle: Double): Matrix44 {
     val r = Math.toRadians(angle)
-    val cr = Math.cos(r)
-    val sr = Math.sin(r)
+    val cr = cos(r)
+    val sr = sin(r)
     return Matrix44(
             cr, -sr, 0.0, 0.0,
             sr, cr, 0.0, 0.0,

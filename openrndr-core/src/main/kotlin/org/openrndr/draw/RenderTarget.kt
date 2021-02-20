@@ -315,7 +315,7 @@ class RenderTargetBuilder(private val renderTarget: RenderTarget) {
      * @param arrayCubemap the [ArrayCubemap] to attach
      * @param side the [CubemapSide] of the [ArrayCubemap] to attach
      * @param layer the layer of the [ArrayCubemap] to attach
-     * @param mipmap level of the [ArrayCubemap] to attach, default is 0
+     * @param level level of the [ArrayCubemap] to attach, default is 0
      */
     fun arrayCubemap(name: String, arrayCubemap: ArrayCubemap, side: CubemapSide, layer: Int, level: Int = 0) {
         renderTarget.attach(arrayCubemap, side, layer, level, name)

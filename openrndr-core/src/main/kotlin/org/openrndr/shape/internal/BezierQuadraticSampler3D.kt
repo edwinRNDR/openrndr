@@ -1,9 +1,7 @@
 package org.openrndr.shape.internal
 
-import org.openrndr.math.Matrix33
 import org.openrndr.math.Vector3
 import org.openrndr.shape.LineSegment3D
-import kotlin.math.abs
 
 internal class BezierQuadraticSampler3D {
     private val recursionLimit = 8

@@ -49,7 +49,7 @@ class ColorBufferLoader {
             Driver.instance.createResourceThread {
                 logger.debug { "ColorBufferLoader thread started" }
                 while (true) {
-                    if (!loader.loadQueue.isEmpty()) {
+                    if (loader.loadQueue.isNotEmpty()) {
                         val proxy = synchronized(loader.loadQueue) {
                             loader.loadQueue.forEach { it.lastTouchedShadow = it.lastTouched }
                             loader.loadQueue.sortBy { it.lastTouchedShadow }
@@ -80,7 +80,7 @@ class ColorBufferLoader {
                     }
 
                     synchronized(loader.unloadQueue) {
-                        if (!loader.unloadQueue.isEmpty()) {
+                        if (loader.unloadQueue.isNotEmpty()) {
                             //loader.unloadQueue.sortBy { it.lastTouched }
                             val dt = System.currentTimeMillis() - loader.unloadQueue[0].lastTouched
                             if (dt > 5000) {

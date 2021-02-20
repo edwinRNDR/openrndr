@@ -231,9 +231,9 @@ class Segment3D {
      * Cubic version of segment
      */
     val cubic: Segment3D
-        get() = when {
-            control.size == 2 -> this
-            control.size == 1 -> {
+        get() = when (control.size) {
+            2 -> this
+            1 -> {
                 Segment3D(start, start * (1.0 / 3.0) + control[0] * (2.0 / 3.0), control[0] * (2.0 / 3.0) + end * (1.0 / 3.0), end)
             }
             else -> throw RuntimeException("cannot convert to cubic segment")
@@ -285,8 +285,8 @@ class Segment3D {
             val cut = start + (end.minus(start) * u)
             return arrayOf(Segment3D(start, cut), Segment3D(cut, end))
         } else {
-            when {
-                control.size == 2 -> {
+            when (control.size) {
+                2 -> {
                     val z = u
                     val z2 = z * z
                     val z3 = z * z * z
@@ -295,10 +295,10 @@ class Segment3D {
                     val iz3 = iz * iz * iz
 
                     val lsm = Matrix44(
-                            1.0, 0.0, 0.0, 0.0,
-                            iz, z, 0.0, 0.0,
-                            iz2, 2.0 * iz * z, z2, 0.0,
-                            iz3, 3.0 * iz2 * z, 3.0 * iz * z2, z3)
+                        1.0, 0.0, 0.0, 0.0,
+                        iz, z, 0.0, 0.0,
+                        iz2, 2.0 * iz * z, z2, 0.0,
+                        iz3, 3.0 * iz2 * z, 3.0 * iz * z2, z3)
 
                     val px = Vector4(start.x, control[0].x, control[1].x, end.x)
                     val py = Vector4(start.y, control[0].y, control[1].y, end.y)
@@ -316,10 +316,10 @@ class Segment3D {
                     val left = Segment3D(pl0, pl1, pl2, pl3)
 
                     val rsm = Matrix44(
-                            iz3, 3.0 * iz2 * z, 3.0 * iz * z2, z3,
-                            0.0, iz2, 2.0 * iz * z, z2,
-                            0.0, 0.0, iz, z,
-                            0.0, 0.0, 0.0, 1.0
+                        iz3, 3.0 * iz2 * z, 3.0 * iz * z2, z3,
+                        0.0, iz2, 2.0 * iz * z, z2,
+                        0.0, 0.0, iz, z,
+                        0.0, 0.0, 0.0, 1.0
                     )
 
                     val prx = rsm * px
@@ -335,17 +335,17 @@ class Segment3D {
 
                     return arrayOf(left, right)
                 }
-                control.size == 1 -> {
+                1 -> {
                     val z = u
                     val iz = 1 - z
                     val iz2 = iz * iz
                     val z2 = z * z
 
                     val lsm = Matrix44(
-                            1.0, 0.0, 0.0, 0.0,
-                            iz, z, 0.0, 0.0,
-                            iz2, 2.0 * iz * z, z2, 0.0,
-                            0.0, 0.0, 0.0, 0.0)
+                        1.0, 0.0, 0.0, 0.0,
+                        iz, z, 0.0, 0.0,
+                        iz2, 2.0 * iz * z, z2, 0.0,
+                        0.0, 0.0, 0.0, 0.0)
 
                     val px = Vector4(start.x, control[0].x, end.x, 0.0)
                     val py = Vector4(start.y, control[0].y, end.y, 0.0)
@@ -356,24 +356,24 @@ class Segment3D {
                     val plz = lsm * pz
 
                     val left = Segment3D(
-                            Vector3(plx.x, ply.x, plz.x),
-                            Vector3(plx.y, ply.y, plz.y),
-                            Vector3(plx.z, ply.z, plz.z))
+                        Vector3(plx.x, ply.x, plz.x),
+                        Vector3(plx.y, ply.y, plz.y),
+                        Vector3(plx.z, ply.z, plz.z))
 
                     val rsm = Matrix44(
-                            iz2, 2.0 * iz * z, z2, 0.0,
-                            0.0, iz, z, 0.0,
-                            0.0, 0.0, 1.0, 0.0,
-                            0.0, 0.0, 0.0, 0.0)
+                        iz2, 2.0 * iz * z, z2, 0.0,
+                        0.0, iz, z, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 0.0)
 
                     val prx = rsm * px
                     val pry = rsm * py
                     val prz = rsm * pz
 
                     val right = Segment3D(
-                            Vector3(prx.x, pry.x, prz.x),
-                            Vector3(prx.y, pry.y, prz.y),
-                            Vector3(prx.z, pry.z, prz.z))
+                        Vector3(prx.x, pry.x, prz.x),
+                        Vector3(prx.y, pry.y, prz.y),
+                        Vector3(prx.z, pry.z, prz.z))
 
                     return arrayOf(left, right)
 

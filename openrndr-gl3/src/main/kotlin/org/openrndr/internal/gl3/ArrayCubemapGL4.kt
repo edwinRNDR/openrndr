@@ -33,7 +33,7 @@ class ArrayCubemapGL4(val target: Int,
             }
             val texture = glGenTextures()
             glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, texture)
-            checkGLErrors() {
+            checkGLErrors {
                 println("problem in glBindTexture")
                 null
             }
@@ -44,7 +44,7 @@ class ArrayCubemapGL4(val target: Int,
                         level, internalFormat(format, type).first,
                         width / div, width / div, layers * 6,
                         0, GL_RGB, GL_UNSIGNED_BYTE, null as ByteBuffer?)
-                checkGLErrors() {
+                checkGLErrors {
                     when (it) {
                         GL_INVALID_VALUE -> "level ($level) is less than 0 ($level < false), or level > max mip level, or width (${width / div}) < 0, or ($layers}) < 0  "
                         else -> null

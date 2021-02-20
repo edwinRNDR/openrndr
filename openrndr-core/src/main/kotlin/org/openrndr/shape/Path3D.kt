@@ -4,6 +4,8 @@ import org.openrndr.math.CatmullRom3
 import org.openrndr.math.CatmullRomChain3
 import org.openrndr.math.Matrix44
 import org.openrndr.math.Vector3
+import kotlin.math.abs
+import kotlin.math.min
 import kotlin.math.pow
 
 
@@ -38,7 +40,7 @@ class Path3D(val segments: List<Segment3D>, val closed: Boolean) {
         val t = ut.coerceIn(0.0, 1.0)
         val segment = (t * segments.size).toInt()
         val segmentOffset = (t * segments.size) - segment
-        return segments[Math.min(segments.size - 1, segment)].position(segmentOffset)
+        return segments[min(segments.size - 1, segment)].position(segmentOffset)
     }
 
     fun adaptivePositions(distanceTolerance: Double = 0.5): List<Vector3> {
@@ -102,7 +104,7 @@ class Path3D(val segments: List<Segment3D>, val closed: Boolean) {
         if (closed && (t1 < t0 || t1 > 1.0 || t0 > 1.0 || t0 < 0.0 || t1 < 0.0)) {
             val diff = t1 - t0
             t0 = mod(t0, 1.0)
-            if (Math.abs(diff) < 0.9999999999999998) {
+            if (abs(diff) < 0.9999999999999998) {
                 return if (diff > 0.0) {
                     t1 = t0 + diff
                     if (t1 > 1.0) {
@@ -150,8 +152,8 @@ class Path3D(val segments: List<Segment3D>, val closed: Boolean) {
         var segment1 = (z1 * length).toInt()
         val segmentOffset1 = if (segment1 < segments.size) z1 * length % 1.0 else 1.0
 
-        segment1 = Math.min(segments.size - 1, segment1)
-        segment0 = Math.min(segments.size - 1, segment0)
+        segment1 = min(segments.size - 1, segment1)
+        segment0 = min(segments.size - 1, segment0)
 
 
         val newSegments = mutableListOf<Segment3D>()
@@ -198,7 +200,9 @@ class Path3D(val segments: List<Segment3D>, val closed: Boolean) {
      * @return a projected point that lies on the contour
      */
     fun project(point: Vector3): PathProjection3D {
-        val nearest = segments.mapIndexed { index, it -> Pair(index, it.project(point)) }.minBy { it.second.distance }!!
+        val nearest = segments.mapIndexed { index, it ->
+            Pair(index, it.project(point))
+        }.minByOrNull { it.second.distance }!!
 
         return PathProjection3D(nearest.second, (nearest.first + nearest.second.projection) /
                 segments.size, nearest.second.distance, nearest.second.point)

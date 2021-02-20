@@ -4,7 +4,7 @@ import org.openrndr.math.Vector2
 import org.openrndr.math.Vector3
 import kotlin.math.roundToInt
 
-/** Returns specified amount of points of equal distance from eachother. */
+/** Returns specified amount of points of equal distance from each other. */
 fun sampleEquidistant(segments: List<Vector2>, count: Int): List<Vector2> {
     val result = mutableListOf<Vector2>()
     if (segments.isEmpty()) {
@@ -60,7 +60,7 @@ fun sampleEquidistant(segments: List<Vector2>, count: Int): List<Vector2> {
     return result
 }
 
-/** Returns specified amount of points of equal distance from eachother. */
+/** Returns specified amount of points of equal distance from each other. */
 @JvmName("sampleEquidistant3D")
 fun sampleEquidistant(pieces: List<Vector3>, count: Int): List<Vector3> {
     val result = mutableListOf<Vector3>()

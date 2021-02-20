@@ -1,11 +1,7 @@
 package org.openrndr.shape.internal
 
-import org.openrndr.math.Matrix33
-import org.openrndr.math.Vector2
 import org.openrndr.math.Vector3
 import org.openrndr.shape.LineSegment3D
-import kotlin.math.abs
-import kotlin.math.atan2
 
 internal class BezierCubicSampler3D {
     private val recursionLimit = 8
@@ -17,7 +13,7 @@ internal class BezierCubicSampler3D {
     fun sample(x1: Vector3, x2: Vector3, x3: Vector3, x4: Vector3): Pair<List<Vector3>, List<Vector3>> {
         distanceToleranceSquare = distanceTolerance * distanceTolerance
         points.clear()
-        points.add(x1);
+        points.add(x1)
         sample(x1, x2, x3, x4, 0)
         points.add(x4); direction.add(x4 - x3)
         return Pair(points, direction)
@@ -132,8 +128,8 @@ internal class BezierCubicSampler3D {
     }
 
     companion object {
-        private val colinearityEpsilon = 1e-30
-        private val angleToleranceEpsilon = 0.01
+        private const val colinearityEpsilon = 1e-30
+        private const val angleToleranceEpsilon = 0.01
 
         private fun squareDistance(x: Double, y: Double, z: Double,
                                    x1: Double, y1: Double, z1:Double): Double {

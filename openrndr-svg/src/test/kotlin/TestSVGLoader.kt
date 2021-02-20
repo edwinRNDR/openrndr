@@ -2,7 +2,6 @@ package org.openrndr.math
 
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should have key`
-import org.amshove.kluent.`should not be in`
 import org.openrndr.resourceUrl
 import org.openrndr.shape.ShapeTopology
 import org.openrndr.shape.Winding

@@ -4,6 +4,7 @@ package org.openrndr.color
 
 import org.openrndr.math.mixAngle
 import org.openrndr.math.mod
+import kotlin.math.floor
 
 
 /**
@@ -106,7 +107,7 @@ data class ColorHSVa(val h: Double, val s: Double, val v: Double, val a: Double 
 
 
         val sh = mod(hsv.h, 360.0) / 60            // sector 0 to 5
-        i = Math.floor(sh).toInt()
+        i = floor(sh).toInt()
         f = sh - i            // factorial part of h
         val p = hsv.v * (1 - hsv.s)
         val q = hsv.v * (1 - hsv.s * f)

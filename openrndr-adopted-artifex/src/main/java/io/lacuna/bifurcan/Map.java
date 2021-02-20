@@ -57,7 +57,7 @@ public class Map<K, V> implements IMap<K, V>, Cloneable {
 
   /**
    * @param entries an sequence of {@code IEntry} objects
-   * @return a forked map containing theentries
+   * @return a forked map containing the entries
    */
   public static <K, V> Map<K, V> from(Iterable<IEntry<K, V>> entries) {
     return from(entries.iterator());

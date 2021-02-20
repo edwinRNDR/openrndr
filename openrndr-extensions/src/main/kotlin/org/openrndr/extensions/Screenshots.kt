@@ -1,15 +1,13 @@
 package org.openrndr.extensions
 
+import mu.KotlinLogging
 import org.openrndr.Extension
 import org.openrndr.Program
 import org.openrndr.draw.*
-import org.openrndr.extensions.CreateScreenshot.*
-import java.io.File
-import java.time.LocalDateTime
-import mu.KotlinLogging
 import org.openrndr.events.Event
+import org.openrndr.extensions.CreateScreenshot.*
 import org.openrndr.utils.namedTimestamp
-import kotlin.math.max
+import java.io.File
 
 private val logger = KotlinLogging.logger {}
 

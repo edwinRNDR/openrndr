@@ -8,7 +8,6 @@ import java.io.IOException
 import java.io.OutputStream
 import java.nio.Buffer
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.channels.Channels
 import java.nio.channels.WritableByteChannel
 import java.util.*
@@ -91,9 +90,9 @@ class MP4Profile : VideoWriterProfile() {
         val filterArguments = arrayOf("-vf", filters.joinToString(","))
 
 
-        val arguments = hwaccelArguments + pixelFormatArguments + chromaArguments + filterArguments + videoCodecArguments + constantRateArguments + presetArguments + userArguments
-
-        return arguments
+        return hwaccelArguments + pixelFormatArguments + chromaArguments +
+                filterArguments + videoCodecArguments + constantRateArguments +
+                presetArguments + userArguments
 
 //        return when (mode) {
 //            WriterMode.Normal -> arrayOf("-pix_fmt", "yuv420p", // this will produce videos that are playable by quicktime

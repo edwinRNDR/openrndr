@@ -1,6 +1,5 @@
 package org.openrndr.math
 
-import kotlin.math.PI
 import kotlin.math.acos
 import kotlin.math.atan2
 

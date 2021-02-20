@@ -251,10 +251,7 @@ data class TextNode(var text: String, var contour: ShapeContour?) : CompositionN
  */
 open class GroupNode(val children: MutableList<CompositionNode> = mutableListOf()) : CompositionNode() {
     override val bounds: Rectangle
-        get() {
-            val b = rectangleBounds(children.map { it.bounds })
-            return b
-        }
+        get() = (children.map { it.bounds }).bounds
 
     fun copy(id: String? = this.id, parent: CompositionNode? = null, transform: Matrix44 = this.transform, fill: CompositionColor = this.fill, stroke: CompositionColor = this.stroke, children: MutableList<CompositionNode> = this.children): GroupNode {
         return GroupNode(children).also {

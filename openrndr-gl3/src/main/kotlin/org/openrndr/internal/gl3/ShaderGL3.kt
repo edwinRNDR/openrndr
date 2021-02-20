@@ -12,7 +12,6 @@ import org.openrndr.measure
 import java.io.File
 import java.io.FileWriter
 import java.nio.Buffer
-import java.nio.ByteBuffer
 
 private val logger = KotlinLogging.logger {}
 
@@ -516,7 +515,7 @@ class ShaderGL3(val program: Int,
             logger.trace { "Setting uniform '$name' to $value" }
 
             val floatValues = FloatArray(value.size * 2)
-            for (i in 0 until value.size) {
+            for (i in value.indices) {
                 floatValues[i * 2] = value[i].x.toFloat()
                 floatValues[i * 2 + 1] = value[i].y.toFloat()
             }
@@ -532,7 +531,7 @@ class ShaderGL3(val program: Int,
             logger.trace { "Setting uniform '$name' to $value" }
 
             val floatValues = FloatArray(value.size * 3)
-            for (i in 0 until value.size) {
+            for (i in value.indices) {
                 floatValues[i * 3] = value[i].x.toFloat()
                 floatValues[i * 3 + 1] = value[i].y.toFloat()
                 floatValues[i * 3 + 2] = value[i].z.toFloat()

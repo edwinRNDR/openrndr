@@ -161,6 +161,6 @@ fun mix(left: Double, right: Double, x: Double) = left * (1.0 - x) + right * x
  * Similar to mix() but assuming that 355° and 5° are 10° apart, not 350°.
  */
 fun mixAngle(leftAngle: Double, rightAngle: Double, x: Double): Double {
-    val shortestAngle = ((((rightAngle - leftAngle) % 360) + 540) % 360) - 180;
-    return (leftAngle + shortestAngle * x) % 360;
+    val shortestAngle = ((((rightAngle - leftAngle) % 360) + 540) % 360) - 180
+    return (leftAngle + shortestAngle * x) % 360
 }

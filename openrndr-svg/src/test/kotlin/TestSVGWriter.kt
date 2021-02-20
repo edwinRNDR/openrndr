@@ -9,7 +9,6 @@ import org.openrndr.svg.toSVG
 import org.openrndr.svg.writeSVG
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import kotlin.test.assertEquals
 
 object TestSVGWriter : Spek({
 

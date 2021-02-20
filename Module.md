@@ -1,6 +1,6 @@
 # Module openrndr
 ## OPENRNDR Standard Library
-A Kotlin/JVM library for creative coding, real-time and interactive graphics. Can currently be used on Windows, macOS and Linux/x64 to create stand alone graphical applications.
+A Kotlin/JVM library for creative coding, real-time and interactive graphics. Can currently be used on Windows, macOS and Linux/x64 to create standalone graphical applications.
 
 Additional Resources:
 - Please have a look at our [application template](https://github.com/openrndr/openrndr-gradle-template) and our [tutorial repository](https://github.com/openrndr/openrndr-tutorials) for usage examples.

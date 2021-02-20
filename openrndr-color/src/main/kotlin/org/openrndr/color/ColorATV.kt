@@ -1,5 +1,7 @@
 package org.openrndr.color
 
+import kotlin.math.pow
+
 data class Hue(val name: Int, val lambda: Double, val angle: Double, val xbl: Double, val ybl: Double, val zbl: Double, val xl: Double, val yl: Double, val sl: Double)
 
 val hues = listOf(
@@ -113,7 +115,7 @@ data class ColorATVa(val id: Int, val t: Double, val v: Double, val alpha: Doubl
         return hue?.let {
             val sigmaW = 3.162955
             val x0 = 0.312726
-            val yy = Math.pow(v / 10.0, 2.0) / 100.0
+            val yy = (v / 10.0).pow(2.0) / 100.0
             val ybl = hue.ybl * 100.0
 
             val x = (sigmaW * x0 * (v * v - t * ybl) + 100 * t * hue.sl * hue.xl) /

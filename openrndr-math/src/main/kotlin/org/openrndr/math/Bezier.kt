@@ -1,5 +1,7 @@
 package org.openrndr.math
 
+import kotlin.math.sqrt
+
 
 /* quadratic bezier */
 fun bezier(x0: Double, c0: Double, x1: Double, t: Double): Double {
@@ -58,7 +60,7 @@ fun roots(p: List<Double>): List<Double> {
         val c = p[2]
         val d = a - 2 * b + c
         if (d != 0.0) {
-            val m1 = -Math.sqrt(b * b - a * c)
+            val m1 = -sqrt(b * b - a * c)
             val m2 = -a + b
             val v1 = -(m1 + m2) / d
             val v2 = -(-m1 + m2) / d

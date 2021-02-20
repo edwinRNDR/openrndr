@@ -268,7 +268,7 @@ open class RenderTargetGL3(val framebuffer: Int,
                 cubemap.texture,
                 level)
 
-        checkGLErrors() { null }
+        checkGLErrors { null }
 
         colorAttachments.add(LayeredCubemapAttachment(colorAttachments.size, name, cubemap, level))
 

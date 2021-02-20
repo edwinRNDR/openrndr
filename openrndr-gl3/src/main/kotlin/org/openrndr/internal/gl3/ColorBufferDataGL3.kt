@@ -122,7 +122,7 @@ class ColorBufferDataGL3(val width: Int, val height: Int, val format: ColorForma
                     8 -> Pair(STBImage.stbi_load_from_memory(buffer, wa, ha, ca, 0)
                             ?:error("stbi_load returned null"), null as ShortBuffer?)
                     16 -> Pair(null as ByteBuffer?, STBImage.stbi_load_16_from_memory(buffer, wa, ha, ca, 0)
-                            ?:error("stdi_load returned null"))
+                            ?:error("stbi_load returned null"))
                     else -> error("unsupported bits per channel: $bitsPerChannel")
                 }
 
@@ -209,7 +209,7 @@ class ColorBufferDataGL3(val width: Int, val height: Int, val format: ColorForma
                 val data = loadDDS(buffer)
                 val buffer = data.image(0)
                 require(buffer.remaining() > 0) {
-                    "image buffer ${buffer} has no remaining bytes"
+                    "image buffer $buffer has no remaining bytes"
                 }
                 return ColorBufferDataGL3(data.width, data.height,data.format, data.type, data.flipV, data.image(0))
 

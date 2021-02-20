@@ -81,7 +81,7 @@ class ComputeShaderGL43(val programObject: Int, val name: String = "compute_shad
     override fun buffer(name: String, vertexBuffer: VertexBuffer) {
         val index = storageIndex.getOrPut(name) { storageIndex.size + 8 }
         vertexBuffer as VertexBufferGL3
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo)
         checkGLErrors()
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, vertexBuffer.buffer)
         checkGLErrors()
@@ -241,7 +241,7 @@ class ComputeShaderGL43(val programObject: Int, val name: String = "compute_shad
                 logger.trace { "Setting uniform '$name' to $value" }
 
                 val floatValues = FloatArray(value.size * 2)
-                for (i in 0 until value.size) {
+                for (i in value.indices) {
                     floatValues[i * 2] = value[i].x.toFloat()
                     floatValues[i * 2 + 1] = value[i].y.toFloat()
                 }
@@ -259,7 +259,7 @@ class ComputeShaderGL43(val programObject: Int, val name: String = "compute_shad
                 logger.trace { "Setting uniform '$name' to $value" }
 
                 val floatValues = FloatArray(value.size * 3)
-                for (i in 0 until value.size) {
+                for (i in value.indices) {
                     floatValues[i * 3] = value[i].x.toFloat()
                     floatValues[i * 3 + 1] = value[i].y.toFloat()
                     floatValues[i * 3 + 2] = value[i].z.toFloat()
@@ -277,7 +277,7 @@ class ComputeShaderGL43(val programObject: Int, val name: String = "compute_shad
                 logger.trace { "Setting uniform '$name' to $value" }
 
                 val floatValues = FloatArray(value.size * 4)
-                for (i in 0 until value.size) {
+                for (i in value.indices) {
                     floatValues[i * 4] = value[i].x.toFloat()
                     floatValues[i * 4 + 1] = value[i].y.toFloat()
                     floatValues[i * 4 + 2] = value[i].z.toFloat()

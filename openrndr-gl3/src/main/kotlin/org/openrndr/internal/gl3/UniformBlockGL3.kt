@@ -204,7 +204,7 @@ class UniformBlockGL3(override val layout: UniformBlockLayout, val blockBinding:
         val entry = layout.entries[name]
         if (entry != null) {
             if (entry.type == UniformType.FLOAT32 && entry.size == value.size) {
-                for (i in 0 until value.size) {
+                for (i in value.indices) {
                     shadowBuffer.putFloat(entry.offset + i * entry.stride, value[i])
                 }
             } else {
@@ -221,7 +221,7 @@ class UniformBlockGL3(override val layout: UniformBlockLayout, val blockBinding:
         if (entry != null) {
             if (entry.type == UniformType.VECTOR4_FLOAT32 && entry.size == value.size) {
                 shadowBuffer.safePosition(entry.offset)
-                for (i in 0 until value.size) {
+                for (i in value.indices) {
                     shadowBuffer.putFloat(value[i].x.toFloat())
                     shadowBuffer.putFloat(value[i].y.toFloat())
                 }
@@ -239,7 +239,7 @@ class UniformBlockGL3(override val layout: UniformBlockLayout, val blockBinding:
         if (entry != null) {
             if (entry.type == UniformType.VECTOR4_FLOAT32 && entry.size == value.size) {
                 shadowBuffer.safePosition(entry.offset)
-                for (i in 0 until value.size) {
+                for (i in value.indices) {
                     shadowBuffer.putFloat(value[i].x.toFloat())
                     shadowBuffer.putFloat(value[i].y.toFloat())
                     shadowBuffer.putFloat(value[i].z.toFloat())
@@ -258,7 +258,7 @@ class UniformBlockGL3(override val layout: UniformBlockLayout, val blockBinding:
         if (entry != null) {
             if (entry.type == UniformType.VECTOR4_FLOAT32 && entry.size == value.size) {
                 shadowBuffer.safePosition(entry.offset)
-                for (i in 0 until value.size) {
+                for (i in value.indices) {
                     shadowBuffer.putFloat(value[i].x.toFloat())
                     shadowBuffer.putFloat(value[i].y.toFloat())
                     shadowBuffer.putFloat(value[i].z.toFloat())

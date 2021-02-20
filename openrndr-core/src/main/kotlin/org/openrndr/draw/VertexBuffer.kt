@@ -60,6 +60,5 @@ interface VertexBuffer {
  * @param vertexCount the number of vertices the vertex buffer should hold
  */
 fun vertexBuffer(vertexFormat: VertexFormat, vertexCount: Int, session: Session? = Session.active): VertexBuffer {
-    val vertexBuffer = VertexBuffer.createDynamic(vertexFormat, vertexCount, session)
-    return vertexBuffer
+    return VertexBuffer.createDynamic(vertexFormat, vertexCount, session)
 }
