@@ -1,37 +1,24 @@
 package org.openrndr.svg
 
 enum class StyleAttribute {
-//    Amplitude,
-//    Azimuth,
-//    BaseFrequency,
     BaselineShift,
-//    Bias,
     Class,
-    ClipPath, // ?
-    ClipRule, // ?
+    ClipPath,
+    ClipRule,
     ClipPathUnits,
-    Color,  // ?
+    Color,
     ColorInterpolationFilters, // ?
     Cx,
     Cy,
     D,
-//    DiffuseConstant,
-    Direction, // ?
-    Display, // ?
-//    Divisor,
+    Direction,
+    Display,
     Dx,
     Dy,
-//    EdgeMode,
-//    Elevation,
     EnableBackground, // ?
-//    Exponent,
     Fill,
-    FillOpacity, // ?
-    FillRule, // ?
-//    Filter,
-//    FilterUnits,
-    FloodColor, // ?
-    FloodOpacity, // ?
+    FillOpacity,
+    FillRule,
     FontFamily,
     FontSize,
     FontStretch,
@@ -45,102 +32,65 @@ enum class StyleAttribute {
     Height,
     Href, // ???
     Id,
-    ImageRendering, // ?
-//    In,
-//    In2,
-//    Intercept,
-//    K1,
-//    K2,
-//    K3,
-//    K4,
-//    KernelMatrix,
-//    KernelUnitLength,
-    LetterSpacing, // ?
-    LightingColor, // ?
-//    LimitingConeAngle,
-    MarkerEnd, // ?
-    MarkerMid, // ?
-    MarkerStart, // ?
+    ImageRendering,
+    LetterSpacing,
+    MarkerEnd,
+    MarkerMid,
+    MarkerStart,
     MarkerHeight,
     MarkerUnits,
     MarkerWidth,
-    Mask, // ?
+    Mask,
     MaskContentUnits,
     MaskUnits,
-//    Mode,
-//    NumOctaves,
     Offset,
-    Opacity, // ?
-//    Operator,
-//    Order,
+    Opacity,
     Orient,
-    Overflow, // ?
+    Overflow,
     PathLength, // ???
     PatternContentUnits,
     PatternTransform,
     PatternUnits,
     Points,
-//    PointsAtX,
-//    PointsAtY,
-//    PointsAtZ,
-//    PreserveAlpha,
     PreserveAspectRatio,
-//    PrimitiveUnits,
     R,
-//    Radius,
     RefX,
     RefY,
     RequiredExtensions,
     RequiredFeatures,
-//    Result,
     Rotate,
     Rx,
     Ry,
-//    Scale,
-//    Seed,
-    ShapeRendering, // ?
-//    Slope,
+    ShapeRendering,
     Space, // ?
-//    SpecularConstant,
-//    SpecularExponent,
     SpreadMethod,
     StartOffset,
-//    StdDeviation,
-//    StitchTiles,
-    StopColor, // ?
-    StopOpacity, // ?
-    Stroke, // ?
-    StrokeDasharray, // ?
-    StrokeDashoffset, // ?
-    StrokeLinecap, // ?
-    StrokeLinejoin, // ?
-    StrokeMiterlimit, // ?
-    StrokeOpacity, // ?
-    StrokeWidth, // ?
+    StopColor,
+    StopOpacity,
+    Stroke,
+    StrokeDasharray,
+    StrokeDashoffset,
+    StrokeLinecap,
+    StrokeLinejoin,
+    StrokeMiterlimit,
+    StrokeOpacity,
+    StrokeWidth,
     Style,
-//    SurfaceScale,
     SystemLanguage,
-//    TableValues,
-//    TargetX,
-//    TargetY,
-    TextAnchor, // ?
-    TextDecoration, // ?
-    TextRendering, // ?
+    TextAnchor,
+    TextDecoration,
+    TextRendering,
     Transform,
     Type,
-//    Values,
     ViewBox,
-    Visibility, // ?
+    Visibility,
     Width,
-    WordSpacing, // ?
-    WritingMode, // ?
+    WordSpacing,
+    WritingMode,
     X,
     X1,
     X2,
-//    XChannelSelector,
     Y,
     Y1,
     Y2,
-//    YChannelSelector,
-//    Z
 }
