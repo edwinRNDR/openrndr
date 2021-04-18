@@ -158,11 +158,12 @@ internal sealed class SVGElement {
     }
 }
 
-internal class SVGImage(val url: String, val x: Double?, val y: Double?, val width: Double?, val height: Double?) : SVGElement()
+internal class SVGImage(val url: String, val x: Double?, val y: Double?, val width: Double?, val height: Double?) :
+    SVGElement()
+
 internal class SVGGroup(val elements: MutableList<SVGElement> = mutableListOf()) : SVGElement()
 
 internal fun parseColor(scolor: String): ColorRGBa? {
-
     return when {
         scolor.isEmpty() || scolor == "none" -> null
         scolor.startsWith("#") -> {
@@ -174,6 +175,7 @@ internal fun parseColor(scolor: String): ColorRGBa? {
             val b = vi and 0xff
             ColorRGBa(r / 255.0, g / 255.0, b / 255.0, 1.0)
         }
+        scolor.startsWith("rgb(") -> parseRgbFunction(scolor)
         scolor == "white" -> ColorRGBa.WHITE
         scolor == "silver" -> ColorRGBa.fromHex(0xc0c0c0)
         scolor == "gray" -> ColorRGBa.fromHex(0x808080)
@@ -209,6 +211,34 @@ fun normalizeColorHex(colorHex: String): String {
     }
 
     return "#$normalizedArgb"
+}
+
+/**
+ * Parses rgb functional notation as described in CSS2 spec
+ */
+fun parseRgbFunction(rgbValue: String): ColorRGBa {
+    // Matches either rgb(0, 0, 0) or rgb(0%, 0%, 0%) and captures the component values (without '%').
+    // Shorten it if you dare (probably not possible unless you can discard all whitespace easily).
+    val rgbRegex =
+        "rgb\\(\\s*(?>(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)|\\s*(\\d+)%\\s*,\\s*(\\d+)%\\s*,\\s*(\\d+)%)\\s*\\)".toRegex()
+
+    val result = rgbRegex.matchEntire(rgbValue) ?: error("The provided rgb functional notation '$rgbValue' is invalid.")
+
+    // The first three capture groups contain values if the match was without percentages
+    // Otherwise the values are in capture groups #4 to #6.
+    // Based on this information, we can deduce the divisor.
+    val divisor = if (result.groups[1] == null) {
+        100.0
+    } else {
+        255.0
+    }
+
+    // Drop full match, filter out empty matches, map it, deconstruct it
+    val (r, g, b) = result.groupValues
+        .drop(1)
+        .filter { it.isNotBlank() }
+        .map { it.toDouble().coerceIn(0.0..divisor) / divisor }
+    return ColorRGBa(r, g, b)
 }
 
 fun expandToTwoDigitsPerComponent(hexValue: String) =
