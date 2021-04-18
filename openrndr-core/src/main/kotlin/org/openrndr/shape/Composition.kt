@@ -2,8 +2,11 @@ package org.openrndr.shape
 
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.ColorBuffer
+import org.openrndr.draw.LineCap
+import org.openrndr.draw.LineJoin
 import org.openrndr.draw.ShadeStyle
 import org.openrndr.math.Matrix44
+import javax.sound.sampled.*
 import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty
 
@@ -26,29 +29,21 @@ sealed class CompositionNode {
      */
     open var transform = Matrix44.IDENTITY
 
-    /**
-     * cascading fill color
-     */
     var fill: CompositionColor = InheritColor
-
-    /**
-     * cascading stroke color
-     */
     var stroke: CompositionColor = InheritColor
-
-    /**
-     * cascading stroke weight
-     */
     var strokeWeight: CompositionStrokeWeight = InheritStrokeWeight
+    var lineCap: CompositionLineCap = InheritLineCap
+    var lineJoin: CompositionLineJoin = InheritLineJoin
+    var miterlimit: CompositionMiterlimit = InheritMiterlimit
+    var strokeOpacity: CompositionStrokeOpacity = InheritStrokeOpacity
+    var fillOpacity: CompositionFillOpacity = InheritFillOpacity
+    var opacity: CompositionOpacity = InheritOpacity
 
     /**
      * node attributes, these are used for loading and saving to SVG
      */
     var attributes = mutableMapOf<String, String?>()
 
-    /**
-     * shadeStyle
-     */
     var shadeStyle: CompositionShadeStyle = InheritShadeStyle
 
     /**
@@ -61,9 +56,10 @@ sealed class CompositionNode {
      */
     abstract val bounds: Rectangle
 
-    /**
-     * the effective [ShadeStyle] calculated from ancestor nodes and current node, null if no shade style
-     */
+    // The effective styles inherited/calculated from the parent nodes and the current node.
+    // Nodes essentially inherit style attributes from their parent by default,
+    // unless explicitly defined otherwise in the node.
+
     val effectiveShadeStyle: ShadeStyle?
         get() {
             return shadeStyle.let {
@@ -74,9 +70,6 @@ sealed class CompositionNode {
             }
         }
 
-    /**
-     * the effective stroke [ColorRGBa] calculated from ancestor nodes and current node, null if no stroke
-     */
     val effectiveStroke: ColorRGBa?
         get() {
             return stroke.let {
@@ -87,9 +80,6 @@ sealed class CompositionNode {
             }
         }
 
-    /**
-     * the effective stroke weight calculated from ancestor nodes and current node, null if no stroke
-     */
     val effectiveStrokeWeight: Double?
         get() {
             return strokeWeight.let {
@@ -100,10 +90,46 @@ sealed class CompositionNode {
             }
         }
 
+    val effectiveLineCap: LineCap?
+        get() {
+            return lineCap.let {
+                when (it) {
+                    is InheritLineCap -> parent?.effectiveLineCap
+                    is org.openrndr.shape.LineCap -> it.cap
+                }
+            }
+        }
 
-    /**
-     * the effective fill [ColorRGBa] calculated from ancestor nodes and current node, null if no fill
-     */
+    val effectiveLineJoin: LineJoin?
+        get() {
+            return lineJoin.let {
+                when (it) {
+                    is InheritLineJoin -> parent?.effectiveLineJoin
+                    is org.openrndr.shape.LineJoin -> it.join
+                }
+            }
+        }
+
+    val effectiveMiterlimit: Double?
+        get() {
+            return miterlimit.let {
+                when (it) {
+                    is InheritMiterlimit -> parent?.effectiveMiterlimit
+                    is Miterlimit -> it.limit
+                }
+            }
+        }
+
+    val effectiveStrokeOpacity: Double?
+        get() {
+            return strokeOpacity.let {
+                when (it) {
+                    is InheritStrokeOpacity -> parent?.effectiveStrokeOpacity
+                    is StrokeOpacity -> it.strokeOpacity
+                }
+            }
+        }
+
     val effectiveFill: ColorRGBa?
         get() {
             return fill.let {
@@ -114,9 +140,26 @@ sealed class CompositionNode {
             }
         }
 
-    /**
-     * the effective transform [Matrix44] calculated from ancestor nodes and current node
-     */
+    val effectiveFillOpacity: Double?
+        get() {
+            return fillOpacity.let {
+                when (it) {
+                    is InheritFillOpacity -> parent?.effectiveFillOpacity
+                    is FillOpacity -> it.fillOpacity
+                }
+            }
+        }
+
+    val effectiveOpacity: Double?
+        get() {
+            return opacity.let {
+                when (it) {
+                    is InheritOpacity -> parent?.effectiveOpacity
+                    is Opacity -> it.opacity
+                }
+            }
+        }
+
     val effectiveTransform: Matrix44
         get() {
             return if (transform === Matrix44.IDENTITY) {
@@ -129,32 +172,62 @@ sealed class CompositionNode {
 
 infix fun KMutableProperty0<CompositionShadeStyle>.`=`(shadeStyle: ShadeStyle?) = this.set(CShadeStyle(shadeStyle))
 infix fun KMutableProperty0<CompositionColor>.`=`(color: ColorRGBa?) = this.set(Color(color))
+@JvmName("=CompositionStrokeWeight")
 infix fun KMutableProperty0<CompositionStrokeWeight>.`=`(weight: Double) = this.set(StrokeWeight(weight))
+infix fun KMutableProperty0<CompositionLineCap>.`=`(cap: LineCap) = this.set(LineCap(cap))
+infix fun KMutableProperty0<CompositionLineJoin>.`=`(join: LineJoin) = this.set(LineJoin(join))
+@JvmName("=CompositionMiterlimit")
+infix fun KMutableProperty0<CompositionMiterlimit>.`=`(limit: Double) = this.set(Miterlimit(limit))
+@JvmName("=CompositionStrokeOpacity")
+infix fun KMutableProperty0<CompositionStrokeOpacity>.`=`(strokeOpacity: Double) = this.set(StrokeOpacity(strokeOpacity))
+@JvmName("=CompositionFillOpacity")
+infix fun KMutableProperty0<CompositionFillOpacity>.`=`(fillOpacity: Double) = this.set(FillOpacity(fillOpacity))
+@JvmName("=CompositionOpacity")
+infix fun KMutableProperty0<CompositionOpacity>.`=`(opacity: Double) = this.set(Opacity(opacity))
 
 operator fun KMutableProperty0<CompositionShadeStyle>.setValue(thisRef: Any?, property: KProperty<*>, value: ShadeStyle) {
     this.set(CShadeStyle(value))
 }
 
-/**
- * cascading color for compositions
- */
+// TODO: Where on earth do I declare default values for these?
+
+// Cascading classes
+
 sealed class CompositionColor
 object InheritColor : CompositionColor()
 data class Color(val color: ColorRGBa?) : CompositionColor()
 
-/**
- * cascading shade styles for compositions
- */
 sealed class CompositionShadeStyle
 object InheritShadeStyle : CompositionShadeStyle()
 data class CShadeStyle(val shadeStyle: ShadeStyle?) : CompositionShadeStyle()
 
-/**
- * cascading stroke weight for compositions
- */
 sealed class CompositionStrokeWeight
 object InheritStrokeWeight : CompositionStrokeWeight()
 data class StrokeWeight(val weight: Double) : CompositionStrokeWeight()
+
+sealed class CompositionLineCap
+object InheritLineCap : CompositionLineCap()
+data class LineCap(val cap: LineCap) : CompositionLineCap()
+
+sealed class CompositionLineJoin
+object InheritLineJoin : CompositionLineJoin()
+data class LineJoin(val join: LineJoin) : CompositionLineJoin()
+
+sealed class CompositionMiterlimit
+object InheritMiterlimit : CompositionMiterlimit()
+data class Miterlimit(val limit: Double) : CompositionMiterlimit()
+
+sealed class CompositionStrokeOpacity
+object InheritStrokeOpacity : CompositionStrokeOpacity()
+data class StrokeOpacity(val strokeOpacity: Double) : CompositionStrokeOpacity()
+
+sealed class CompositionFillOpacity
+object InheritFillOpacity : CompositionFillOpacity()
+data class FillOpacity(val fillOpacity: Double) : CompositionFillOpacity()
+
+sealed class CompositionOpacity
+object InheritOpacity : CompositionOpacity()
+data class Opacity(val opacity: Double) : CompositionOpacity()
 
 private fun transform(node: CompositionNode): Matrix44 =
         (node.parent?.let { transform(it) } ?: Matrix44.IDENTITY) * node.transform
@@ -252,7 +325,7 @@ data class TextNode(var text: String, var contour: ShapeContour?) : CompositionN
 open class GroupNode(val children: MutableList<CompositionNode> = mutableListOf()) : CompositionNode() {
     override val bounds: Rectangle
         get() {
-            val b = rectangleBounds(children.map { it.bounds })
+            val b = children.map { it.bounds }.bounds
             return b
         }
 

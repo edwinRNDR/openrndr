@@ -400,7 +400,7 @@ data class DrawStyle(
 
     var strokeWeight: Double = 1.0,
     var smooth: Boolean = true,
-    var miterLimit: Double = 100.0,
+    var miterLimit: Double = 4.0,
 
     var quality: DrawQuality = DrawQuality.QUALITY,
 

@@ -1051,6 +1051,7 @@ class Drawer(val driver: Driver) {
         fill = ColorRGBa.BLACK
         stroke = null
 
+
         fun node(compositionNode: CompositionNode) {
             pushModel()
             pushStyle()
@@ -1059,8 +1060,6 @@ class Drawer(val driver: Driver) {
             when (val s = compositionNode.shadeStyle) {
                 is CShadeStyle -> {
                     shadeStyle = s.shadeStyle
-                }
-                else -> {
                 }
             }
 
@@ -1071,14 +1070,30 @@ class Drawer(val driver: Driver) {
                             fill = it.color
                         }
                     }
+                    compositionNode.fillOpacity.let {
+                        if (it is FillOpacity) {
+                            fill = fill?.opacify(it.fillOpacity)
+                        }
+                    }
                     compositionNode.stroke.let {
                         if (it is Color) {
                             stroke = it.color
                         }
                     }
+                    compositionNode.strokeOpacity.let {
+                        if (it is StrokeOpacity) {
+                            stroke = stroke?.opacify(it.strokeOpacity)
+                        }
+                    }
                     compositionNode.strokeWeight.let {
                         if (it is StrokeWeight) {
                             strokeWeight = it.weight
+                        }
+                    }
+                    compositionNode.opacity.let {
+                        if (it is Opacity) {
+                            stroke = stroke?.opacify(it.opacity)
+                            fill = fill?.opacify(it.opacity)
                         }
                     }
                     shape(compositionNode.shape)

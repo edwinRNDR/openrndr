@@ -4,6 +4,8 @@ import org.openrndr.collections.pflatMap
 import org.openrndr.collections.pforEach
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.ColorBuffer
+import org.openrndr.draw.LineCap
+import org.openrndr.draw.LineJoin
 import org.openrndr.math.Matrix44
 import org.openrndr.math.Vector2
 import org.openrndr.math.Vector3
@@ -37,12 +39,18 @@ enum class ClipMode(val grouped: Boolean, val op: ClipOp) {
 }
 
 private data class CompositionDrawStyle(
-        var fill: ColorRGBa? = null,
-        var stroke: ColorRGBa? = ColorRGBa.BLACK,
-        var strokeWeight: Double = 1.0,
-        var clipMode: ClipMode = ClipMode.DISABLED,
-        var mask: Shape? = null,
-        var transformMode: TransformMode = TransformMode.APPLY
+    var fill: ColorRGBa? = null,
+    var fillOpacity: Double = 1.0,
+    var stroke: ColorRGBa? = ColorRGBa.BLACK,
+    var strokeOpacity: Double = 1.0,
+    var strokeWeight: Double = 1.0,
+    var opacity: Double = 1.0,
+    var clipMode: ClipMode = ClipMode.DISABLED,
+    var mask: Shape? = null,
+    var transformMode: TransformMode = TransformMode.APPLY,
+    var lineCap: LineCap = LineCap.BUTT,
+    var lineJoin: LineJoin = LineJoin.MITER,
+    var miterlimit: Double = 4.0
 )
 
 data class ShapeNodeIntersection(val node: ShapeNode, val intersection: ContourIntersection)
@@ -83,16 +91,34 @@ class CompositionDrawer(documentBounds: Rectangle = DefaultCompositionBounds,
     var model = Matrix44.IDENTITY
 
     var fill
-        get() = drawStyle.fill
-        set(value) = run { drawStyle.fill = value }
+        get() = drawStyle.fill?.opacify(drawStyle.fillOpacity)?.opacify(drawStyle.opacity)
+        set(value) = run {
+            drawStyle.fill = value?.copy(a = 1.0)
+            drawStyle.fillOpacity = value?.a ?: 1.0
+        }
+
+    var fillOpacity
+        get() = drawStyle.fillOpacity
+        set(value) = run { drawStyle.fillOpacity = value }
 
     var stroke
-        get() = drawStyle.stroke
-        set(value) = run { drawStyle.stroke = value }
+        get() = drawStyle.fill?.opacify(drawStyle.strokeOpacity)?.opacify(drawStyle.opacity)
+        set(value) = run {
+            drawStyle.stroke = value?.copy(a = 1.0)
+            drawStyle.strokeOpacity = value?.a ?: 1.0
+        }
+
+    var strokeOpacity
+        get() = drawStyle.strokeOpacity
+        set(value) = run { drawStyle.strokeOpacity = value }
 
     var strokeWeight
         get() = drawStyle.strokeWeight
         set(value) = run { drawStyle.strokeWeight = value }
+
+    var opacity
+        get() = drawStyle.opacity
+        set(value) = run { drawStyle.opacity = value }
 
     var clipMode
         get() = drawStyle.clipMode
@@ -211,7 +237,7 @@ class CompositionDrawer(documentBounds: Rectangle = DefaultCompositionBounds,
         var from = shape
 
         for (subtract in shapes) {
-            if (intersects(shape.bounds, subtract.shape.bounds)) {
+            if (shape.bounds.intersects(subtract.shape.bounds)) {
                 from = difference(from, subtract.shape)
             }
         }
@@ -246,12 +272,11 @@ class CompositionDrawer(documentBounds: Rectangle = DefaultCompositionBounds,
      * @return a list of `ShapeNodeIntersection`
      */
     fun intersections(
-            contour: ShapeContour,
-            searchFrom: CompositionNode = composition.root as GroupNode,
-            mergeThreshold: Double = 0.5
+        contour: ShapeContour,
+        searchFrom: CompositionNode = composition.root as GroupNode,
+        mergeThreshold: Double = 0.5
     ): List<ShapeNodeIntersection> {
-        val start = System.currentTimeMillis()
-        val result = searchFrom.findShapes().pflatMap { node ->
+        return searchFrom.findShapes().pflatMap { node ->
             if (intersects(node.bounds, contour.bounds)) {
                 node.shape.contours.flatMap {
                     intersections(contour, it).map {
@@ -268,8 +293,6 @@ class CompositionDrawer(documentBounds: Rectangle = DefaultCompositionBounds,
                 it
             }
         }
-        val end = System.currentTimeMillis()
-        return result
     }
 
     fun CompositionNode.intersections(contour: ShapeContour, mergeThreshold: Double = 0.5) =
@@ -608,6 +631,7 @@ class CompositionDrawer(documentBounds: Rectangle = DefaultCompositionBounds,
      * @param insert when true the copy is inserted at [cursor]
      * @return a deep copy of the node
      */
+    // TODO: Include new features
     fun CompositionNode.duplicate(insert: Boolean = true): CompositionNode {
         fun nodeCopy(node: CompositionNode): CompositionNode {
             val copy = when (node) {

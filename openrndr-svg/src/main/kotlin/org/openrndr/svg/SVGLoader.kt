@@ -5,6 +5,8 @@ import org.jsoup.nodes.Element
 import org.jsoup.parser.Parser
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.ColorBuffer
+import org.openrndr.draw.LineCap
+import org.openrndr.draw.LineJoin
 import org.openrndr.math.Matrix44
 import org.openrndr.math.Vector2
 import org.openrndr.math.YPolarity
@@ -100,10 +102,11 @@ internal sealed class SVGElement {
             if (token.startsWith("matrix")) {
                 val operands = getTransformOperands(token)
                 val mat = Matrix44(
-                        operands[0], operands[2], 0.0, operands[4],
-                        operands[1], operands[3], 0.0, operands[5],
-                        0.0, 0.0, 1.0, 0.0,
-                        0.0, 0.0, 0.0, 1.0)
+                    operands[0], operands[2], 0.0, operands[4],
+                    operands[1], operands[3], 0.0, operands[5],
+                    0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 1.0
+                )
                 transform *= mat
             }
             if (token.startsWith("scale")) {
@@ -123,26 +126,32 @@ internal sealed class SVGElement {
                 val cosa = cos(angle)
                 val x = operands.elementAtOrElse(1) { 0.0 }
                 val y = operands.elementAtOrElse(2) { 0.0 }
-                val mat = Matrix44(cosa, -sina, 0.0, -x*cosa + y*sina + x,
-                    sina, cosa, 0.0, -x*sina - y*cosa + y,
+                val mat = Matrix44(
+                    cosa, -sina, 0.0, -x * cosa + y * sina + x,
+                    sina, cosa, 0.0, -x * sina - y * cosa + y,
                     0.0, 0.0, 1.0, 0.0,
-                    0.0, 0.0, 0.0, 1.0)
+                    0.0, 0.0, 0.0, 1.0
+                )
                 transform *= mat
             }
             if (token.startsWith("skewX")) {
                 val operands = getTransformOperands(token.substring(5))
-                val mat = Matrix44(1.0, tan(Math.toRadians(operands[0])), 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 1.0, 0.0,
-                0.0, 0.0, 0.0, 1.0)
+                val mat = Matrix44(
+                    1.0, tan(Math.toRadians(operands[0])), 0.0, 0.0,
+                    0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 1.0
+                )
                 transform *= mat
             }
             if (token.startsWith("skewY")) {
                 val operands = getTransformOperands(token.substring(5))
-                val mat = Matrix44(1.0, 0.0, 0.0, 0.0,
+                val mat = Matrix44(
+                    1.0, 0.0, 0.0, 0.0,
                     tan(Math.toRadians(operands[0])), 1.0, 0.0, 0.0,
                     0.0, 0.0, 1.0, 0.0,
-                    0.0, 0.0, 0.0, 1.0)
+                    0.0, 0.0, 0.0, 1.0
+                )
                 transform *= mat
             }
         }
@@ -151,7 +160,6 @@ internal sealed class SVGElement {
 
 internal class SVGImage(val url: String, val x: Double?, val y: Double?, val width: Double?, val height: Double?) : SVGElement()
 internal class SVGGroup(val elements: MutableList<SVGElement> = mutableListOf()) : SVGElement()
-
 
 internal fun parseColor(scolor: String): ColorRGBa? {
 
@@ -167,7 +175,6 @@ internal fun parseColor(scolor: String): ColorRGBa? {
             ColorRGBa(r / 255.0, g / 255.0, b / 255.0, 1.0)
         }
         scolor == "white" -> ColorRGBa.WHITE
-
         scolor == "silver" -> ColorRGBa.fromHex(0xc0c0c0)
         scolor == "gray" -> ColorRGBa.fromHex(0x808080)
         scolor == "black" -> ColorRGBa.BLACK
@@ -192,7 +199,7 @@ fun normalizeColorHex(colorHex: String): String {
     val colorHexRegex = "#?([0-9a-f]{3,6})".toRegex(RegexOption.IGNORE_CASE)
 
     val matchResult = colorHexRegex.matchEntire(colorHex)
-            ?: error("The provided colorHex '$colorHex' is not a valid color hex for the SVG spec")
+        ?: error("The provided colorHex '$colorHex' is not a valid color hex for the SVG spec")
 
     val hexValue = matchResult.groups[1]!!.value.toLowerCase()
     val normalizedArgb = when (hexValue.length) {
@@ -205,9 +212,9 @@ fun normalizeColorHex(colorHex: String): String {
 }
 
 fun expandToTwoDigitsPerComponent(hexValue: String) =
-        hexValue.asSequence()
-                .map { "$it$it" }
-                .reduce { accumulatedHex, component -> accumulatedHex + component }
+    hexValue.asSequence()
+        .map { "$it$it" }
+        .reduce { accumulatedHex, component -> accumulatedHex + component }
 
 internal fun Double.toBoolean() = this.toInt() == 1
 
@@ -253,12 +260,17 @@ internal fun parseArcCommand(p: String): List<List<String>> {
     return commands
 }
 
-
 internal class SVGPath : SVGElement() {
     val commands = mutableListOf<Command>()
     var fill: CompositionColor = InheritColor
     var stroke: CompositionColor = InheritColor
     var strokeWeight: CompositionStrokeWeight = InheritStrokeWeight
+    var lineCap: CompositionLineCap = InheritLineCap
+    var lineJoin: CompositionLineJoin = InheritLineJoin
+    var miterlimit: CompositionMiterlimit = InheritMiterlimit
+    var strokeOpacity: CompositionStrokeOpacity = InheritStrokeOpacity
+    var fillOpacity: CompositionFillOpacity = InheritFillOpacity
+    var opacity: CompositionOpacity = InheritOpacity
 
     companion object {
         fun fromSVGPathString(svgPath: String): SVGPath {
@@ -479,7 +491,7 @@ internal class SVGPath : SVGElement() {
                         closed = true
                     }
                     else -> {
-                        error("unsupported op: ${command.op}, is this a TinySVG 1.x document?")
+                        error("unsupported op: ${command.op}, is this an SVG Tiny 1.x document?")
                     }
                 }
             }
@@ -489,18 +501,22 @@ internal class SVGPath : SVGElement() {
     }
 
     fun parseDrawAttributes(e: Element) {
-        if (e.hasAttr("fill")) {
-            fill = Color(parseColor(e.attr("fill")))
+        e.attributes().forEach {
+            when (it.key) {
+                At.FILL -> fill = Color(parseColor(e.attr(At.FILL)))
+                At.STROKE -> stroke = Color(parseColor(e.attr(At.STROKE)))
+                At.STROKE_WIDTH -> strokeWeight = StrokeWeight(e.attr(At.STROKE_WIDTH).toDouble())
+                At.STROKE_LINECAP -> lineCap = LineCap(LineCap.valueOf(e.attr(At.STROKE_LINECAP)))
+                At.STROKE_LINEJOIN -> lineJoin = LineJoin(LineJoin.valueOf(e.attr(At.STROKE_LINEJOIN)))
+                At.STROKE_MITERLIMIT -> miterlimit = Miterlimit(e.attr(At.STROKE_MITERLIMIT).toDouble())
+                At.STROKE_OPACITY -> strokeOpacity = StrokeOpacity(e.attr(At.STROKE_OPACITY).toDouble())
+                At.FILL_OPACITY -> fillOpacity = FillOpacity(e.attr(At.FILL_OPACITY).toDouble())
+                At.OPACITY -> opacity = Opacity(e.attr(At.OPACITY).toDouble())
+            }
         }
 
-        if (e.hasAttr("stroke")) {
-            stroke = Color(parseColor(e.attr("stroke")))
-        }
-        if (e.hasAttr("stroke-width")) {
-            strokeWeight = StrokeWeight(e.attr("stroke-width").toDouble())
-        }
-
-        e.attr("style").split(";").forEach {
+        // TODO: Handle above
+        e.attr(At.STYLE).split(";").forEach {
             val tokens = it.split(":")
             val attribute = tokens[0].toLowerCase().trim()
 
@@ -510,10 +526,17 @@ internal class SVGPath : SVGElement() {
                 ""
             }
 
+            // TODO: Can this repetition be reduced?
             when (attribute) {
-                "fill" -> fill = Color(parseColor(value()))
-                "stroke" -> stroke = Color(parseColor(value()))
-                "stroke-width" -> strokeWeight = StrokeWeight(value().toDouble())
+                At.FILL -> fill = Color(parseColor(value()))
+                At.STROKE -> stroke = Color(parseColor(value()))
+                At.STROKE_WIDTH -> strokeWeight = StrokeWeight(value().toDouble())
+                At.STROKE_LINECAP -> lineCap = LineCap(LineCap.valueOf(e.attr(At.STROKE_LINECAP)))
+                At.STROKE_LINEJOIN -> lineJoin = LineJoin(LineJoin.valueOf(e.attr(At.STROKE_LINEJOIN)))
+                At.STROKE_MITERLIMIT -> miterlimit = Miterlimit(e.attr(At.STROKE_MITERLIMIT).toDouble())
+                At.STROKE_OPACITY -> strokeOpacity = StrokeOpacity(e.attr(At.STROKE_OPACITY).toDouble())
+                At.FILL_OPACITY -> fillOpacity = FillOpacity(e.attr(At.FILL_OPACITY).toDouble())
+                At.OPACITY -> opacity = Opacity(e.attr(At.OPACITY).toDouble())
             }
         }
     }
@@ -534,6 +557,11 @@ internal class SVGDocument(private val root: SVGElement, val namespaces: Map<Str
                 fill = e.fill
                 stroke = e.stroke
                 strokeWeight = e.strokeWeight
+                lineJoin = e.lineJoin
+                miterlimit = e.miterlimit
+                strokeOpacity = e.strokeOpacity
+                fillOpacity = e.fillOpacity
+                opacity = e.opacity
                 this.id = e.id
             }
         }
@@ -553,26 +581,28 @@ internal class SVGDocument(private val root: SVGElement, val namespaces: Map<Str
 internal class SVGLoader {
     fun loadSVG(svg: String): SVGDocument {
         val doc = Jsoup.parse(svg, "", Parser.xmlParser())
-        val root = doc.select("svg").first()
+        val root = doc.select(El.SVG).first()
         val namespaces = root.attributes().filter { it.key.startsWith("xmlns") }.associate {
             Pair(it.key, it.value)
         }
-//        val version = root.attr("version")
 
-//        val supportedVersions = setOf("1.0", "1.1", "1.2")
+        // Deprecated in SVG 2.0 and not a popular attribute anyway
+        // but if it is present and is not 1.2, we can notify the user
+        // that it's UB from here on out
+        val version = root.attr(At.VERSION)
+        val unsupportedVersions = setOf("1.0", "1.1")
 
-//        if (version !in supportedVersions) {
-//            error("SVG version `$version` is not supported")
-//        }
-
-        // a lot of SVG files that don't have profile set still mostly work with the parser.
-        // disabling baseProfile check for now
-        /*
-        val baseProfile = root.attr("baseProfile")
-        if (baseProfile != "tiny") {
-            throw IllegalArgumentException("SVG base-profile `$baseProfile` is not supported")
+        if (version in unsupportedVersions) {
+            println("SVG version \"$version\" is not supported!")
         }
-        */
+
+        // Deprecated in SVG 2.0
+        val baseProfile = root.attr(At.BASE_PROFILE)
+        val unsupportProfiles = setOf("full", "basic")
+
+        if (baseProfile in unsupportProfiles) {
+            println("SVG baseProfile \"$baseProfile\" is not supported!")
+        }
 
         val rootGroup = SVGGroup()
         handleGroup(rootGroup, root)
@@ -580,7 +610,7 @@ internal class SVGLoader {
     }
 
     private fun handlePolygon(group: SVGGroup, e: Element) {
-        val tokens = e.attr("points").split("[ ,\n]+".toRegex()).map { it.trim() }.filter { it.isNotEmpty() }
+        val tokens = e.attr(At.POINTS).split("[ ,\n]+".toRegex()).map { it.trim() }.filter { it.isNotEmpty() }
         val points = (0 until tokens.size / 2).map { Vector2(tokens[it * 2].toDouble(), tokens[it * 2 + 1].toDouble()) }
         val path = SVGPath().apply {
             id = e.id()
@@ -595,7 +625,7 @@ internal class SVGLoader {
     }
 
     private fun handlePolyline(group: SVGGroup, e: Element) {
-        val tokens = e.attr("points").split("[ ,\n]+".toRegex()).map { it.trim() }.filter { it.isNotEmpty() }
+        val tokens = e.attr(At.POINTS).split("[ ,\n]+".toRegex()).map { it.trim() }.filter { it.isNotEmpty() }
         val points = (0 until tokens.size / 2).map { Vector2(tokens[it * 2].toDouble(), tokens[it * 2 + 1].toDouble()) }
         val path = SVGPath().apply {
             id = e.id()
@@ -617,22 +647,22 @@ internal class SVGLoader {
         parent.elements.add(group)
         e.children().forEach { c ->
             when (c.tagName()) {
-                "g" -> handleGroup(group, c)
-                "path" -> handlePath(group, c)
-                "line" -> handleLine(group, c)
-                "rect" -> handleRectangle(group, c)
-                "ellipse" -> handleEllipse(group, c)
-                "circle" -> handleCircle(group, c)
-                "polygon" -> handlePolygon(group, c)
-                "polyline" -> handlePolyline(group, c)
-                "image" -> handleImage(group, c)
+                El.G -> handleGroup(group, c)
+                El.PATH -> handlePath(group, c)
+                El.LINE -> handleLine(group, c)
+                El.RECT -> handleRectangle(group, c)
+                El.ELLIPSE -> handleEllipse(group, c)
+                El.CIRCLE -> handleCircle(group, c)
+                El.POLYGON -> handlePolygon(group, c)
+                El.POLYLINE -> handlePolyline(group, c)
+                El.IMAGE -> handleImage(group, c)
             }
         }
     }
 
     private fun handleImage(group: SVGGroup, e: Element) {
-        val width = e.attr("width").toDoubleOrNull()
-        val height = e.attr("height").toDoubleOrNull()
+        val width = e.attr(At.WIDTH).toDoubleOrNull()
+        val height = e.attr(At.HEIGHT).toDoubleOrNull()
         val x = e.attr("x").toDoubleOrNull()
         val y = e.attr("y").toDoubleOrNull()
         val imageData = e.attr("xlink:href")
@@ -644,25 +674,26 @@ internal class SVGLoader {
     }
 
     private fun handleEllipse(group: SVGGroup, e: Element) {
-        var x = e.attr("cx").let { if (it.isEmpty()) 0.0 else it.toDouble() }
-        var y = e.attr("cy").let { if (it.isEmpty()) 0.0 else it.toDouble() }
-        val width = e.attr("rx").let { if (it.isEmpty()) 0.0 else it.toDouble() } * 2.0
-        val height = e.attr("ry").let { if (it.isEmpty()) 0.0 else it.toDouble() } * 2.0
+        var x = e.attr(At.CX).let { if (it.isEmpty()) 0.0 else it.toDouble() }
+        var y = e.attr(At.CY).let { if (it.isEmpty()) 0.0 else it.toDouble() }
+        val width = e.attr(At.RX).let { if (it.isEmpty()) 0.0 else it.toDouble() } * 2.0
+        val height = e.attr(At.RY).let { if (it.isEmpty()) 0.0 else it.toDouble() } * 2.0
         x -= width / 2
         y -= height / 2
 
         val kappa = 0.5522848
-        val ox = width / 2 * kappa
         // control point offset horizontal
-        val oy = height / 2 * kappa
+        val ox = width / 2 * kappa
         // control point offset vertical
-        val xe = x + width
+        val oy = height / 2 * kappa
         // x-end
-        val ye = y + height
+        val xe = x + width
         // y-end
-        val xm = x + width / 2
+        val ye = y + height
         // x-middle
-        val ym = y + height / 2       // y-middle
+        val xm = x + width / 2
+        // y-middle
+        val ym = y + height / 2
 
         val path = SVGPath()
         path.id = e.id()
@@ -679,25 +710,26 @@ internal class SVGLoader {
     }
 
     private fun handleCircle(group: SVGGroup, e: Element) {
-        var x = e.attr("cx").let { if (it.isEmpty()) 0.0 else it.toDouble() }
-        var y = e.attr("cy").let { if (it.isEmpty()) 0.0 else it.toDouble() }
-        val width = e.attr("r").let { if (it.isEmpty()) 0.0 else it.toDouble() } * 2.0
-        val height = e.attr("r").let { if (it.isEmpty()) 0.0 else it.toDouble() } * 2.0
+        var x = e.attr(At.CX).let { if (it.isEmpty()) 0.0 else it.toDouble() }
+        var y = e.attr(At.CY).let { if (it.isEmpty()) 0.0 else it.toDouble() }
+        val width = e.attr(At.R).let { if (it.isEmpty()) 0.0 else it.toDouble() } * 2.0
+        val height = e.attr(At.R).let { if (it.isEmpty()) 0.0 else it.toDouble() } * 2.0
         x -= width / 2
         y -= height / 2
 
         val kappa = 0.5522848
-        val ox = width / 2 * kappa
         // control point offset horizontal
-        val oy = height / 2 * kappa
+        val ox = width / 2 * kappa
         // control point offset vertical
-        val xe = x + width
+        val oy = height / 2 * kappa
         // x-end
-        val ye = y + height
+        val xe = x + width
         // y-end
-        val xm = x + width / 2
+        val ye = y + height
         // x-middle
-        val ym = y + height / 2       // y-middle
+        val xm = x + width / 2
+        // y-middle
+        val ym = y + height / 2
 
         val path = SVGPath()
         path.id = e.id()
@@ -725,10 +757,10 @@ internal class SVGLoader {
 //    }
 
     private fun handleRectangle(group: SVGGroup, e: Element) {
-        val x = e.attr("x").let { if (it.isEmpty()) 0.0 else it.toDouble() }
-        val y = e.attr("y").let { if (it.isEmpty()) 0.0 else it.toDouble() }
-        val width = e.attr("width").toDouble()
-        val height = e.attr("height").toDouble()
+        val x = e.attr(At.X).let { if (it.isEmpty()) 0.0 else it.toDouble() }
+        val y = e.attr(At.Y).let { if (it.isEmpty()) 0.0 else it.toDouble() }
+        val width = e.attr(At.WIDTH).toDouble()
+        val height = e.attr(At.HEIGHT).toDouble()
 
         val path = SVGPath().apply {
             id = e.id()
@@ -745,10 +777,10 @@ internal class SVGLoader {
     }
 
     private fun handleLine(group: SVGGroup, e: Element) {
-        val x1 = e.attr("x1").toDouble()
-        val x2 = e.attr("x2").toDouble()
-        val y1 = e.attr("y1").toDouble()
-        val y2 = e.attr("y2").toDouble()
+        val x1 = e.attr(At.X1).toDouble()
+        val x2 = e.attr(At.X2).toDouble()
+        val y1 = e.attr(At.Y1).toDouble()
+        val y2 = e.attr(At.Y2).toDouble()
 
         val path = SVGPath().apply {
             parseDrawAttributes(e)
@@ -760,7 +792,7 @@ internal class SVGLoader {
     }
 
     private fun handlePath(group: SVGGroup, e: Element) {
-        val path = SVGPath.fromSVGPathString(e.attr("d")).apply {
+        val path = SVGPath.fromSVGPathString(e.attr(At.D)).apply {
             id = e.id()
             parseDrawAttributes(e)
             parseTransform(e)
