@@ -1,7 +1,7 @@
 package org.openrndr.svg
 
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
+import org.jsoup.nodes.*
 import org.jsoup.parser.Parser
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.ColorBuffer
@@ -530,19 +530,23 @@ internal class SVGPath : SVGElement() {
         return Shape(contours)
     }
 
+    private fun parseAttribute(key: String, value: String) {
+        when (key) {
+            At.FILL -> fill = Color(parseColor(value))
+            At.STROKE -> stroke = Color(parseColor(value))
+            At.STROKE_WIDTH -> strokeWeight = StrokeWeight(value.toDouble())
+            At.STROKE_LINECAP -> lineCap = LineCap(LineCap.valueOf(value))
+            At.STROKE_LINEJOIN -> lineJoin = LineJoin(LineJoin.valueOf(value))
+            At.STROKE_MITERLIMIT -> miterlimit = Miterlimit(value.toDouble())
+            At.STROKE_OPACITY -> strokeOpacity = StrokeOpacity(value.toDouble())
+            At.FILL_OPACITY -> fillOpacity = FillOpacity(value.toDouble())
+            At.OPACITY -> opacity = Opacity(value.toDouble())
+        }
+    }
+
     fun parseDrawAttributes(e: Element) {
         e.attributes().forEach {
-            when (it.key) {
-                At.FILL -> fill = Color(parseColor(e.attr(At.FILL)))
-                At.STROKE -> stroke = Color(parseColor(e.attr(At.STROKE)))
-                At.STROKE_WIDTH -> strokeWeight = StrokeWeight(e.attr(At.STROKE_WIDTH).toDouble())
-                At.STROKE_LINECAP -> lineCap = LineCap(LineCap.valueOf(e.attr(At.STROKE_LINECAP)))
-                At.STROKE_LINEJOIN -> lineJoin = LineJoin(LineJoin.valueOf(e.attr(At.STROKE_LINEJOIN)))
-                At.STROKE_MITERLIMIT -> miterlimit = Miterlimit(e.attr(At.STROKE_MITERLIMIT).toDouble())
-                At.STROKE_OPACITY -> strokeOpacity = StrokeOpacity(e.attr(At.STROKE_OPACITY).toDouble())
-                At.FILL_OPACITY -> fillOpacity = FillOpacity(e.attr(At.FILL_OPACITY).toDouble())
-                At.OPACITY -> opacity = Opacity(e.attr(At.OPACITY).toDouble())
-            }
+            parseAttribute(it.key, it.value)
         }
 
         // TODO: Handle above
@@ -556,18 +560,7 @@ internal class SVGPath : SVGElement() {
                 ""
             }
 
-            // TODO: Can this repetition be reduced?
-            when (attribute) {
-                At.FILL -> fill = Color(parseColor(value()))
-                At.STROKE -> stroke = Color(parseColor(value()))
-                At.STROKE_WIDTH -> strokeWeight = StrokeWeight(value().toDouble())
-                At.STROKE_LINECAP -> lineCap = LineCap(LineCap.valueOf(e.attr(At.STROKE_LINECAP)))
-                At.STROKE_LINEJOIN -> lineJoin = LineJoin(LineJoin.valueOf(e.attr(At.STROKE_LINEJOIN)))
-                At.STROKE_MITERLIMIT -> miterlimit = Miterlimit(e.attr(At.STROKE_MITERLIMIT).toDouble())
-                At.STROKE_OPACITY -> strokeOpacity = StrokeOpacity(e.attr(At.STROKE_OPACITY).toDouble())
-                At.FILL_OPACITY -> fillOpacity = FillOpacity(e.attr(At.FILL_OPACITY).toDouble())
-                At.OPACITY -> opacity = Opacity(e.attr(At.OPACITY).toDouble())
-            }
+            parseAttribute(attribute, value())
         }
     }
 }
