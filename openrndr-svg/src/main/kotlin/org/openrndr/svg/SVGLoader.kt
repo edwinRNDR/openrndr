@@ -535,8 +535,8 @@ internal class SVGPath : SVGElement() {
             At.FILL -> fill = Color(parseColor(value))
             At.STROKE -> stroke = Color(parseColor(value))
             At.STROKE_WIDTH -> strokeWeight = StrokeWeight(value.toDouble())
-            At.STROKE_LINECAP -> lineCap = LineCap(LineCap.valueOf(value))
-            At.STROKE_LINEJOIN -> lineJoin = LineJoin(LineJoin.valueOf(value))
+            At.STROKE_LINECAP -> lineCap = LineCap(LineCap.valueOf(value.toUpperCase()))
+            At.STROKE_LINEJOIN -> lineJoin = LineJoin(LineJoin.valueOf(value.toUpperCase()))
             At.STROKE_MITERLIMIT -> miterlimit = Miterlimit(value.toDouble())
             At.STROKE_OPACITY -> strokeOpacity = StrokeOpacity(value.toDouble())
             At.FILL_OPACITY -> fillOpacity = FillOpacity(value.toDouble())
@@ -549,7 +549,6 @@ internal class SVGPath : SVGElement() {
             parseAttribute(it.key, it.value)
         }
 
-        // TODO: Handle above
         e.attr(At.STYLE).split(";").forEach {
             val tokens = it.split(":")
             val attribute = tokens[0].toLowerCase().trim()
