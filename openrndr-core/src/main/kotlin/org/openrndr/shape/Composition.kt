@@ -189,8 +189,6 @@ operator fun KMutableProperty0<CompositionShadeStyle>.setValue(thisRef: Any?, pr
     this.set(CShadeStyle(value))
 }
 
-// TODO: Where on earth do I declare default values for these?
-
 // Cascading classes
 
 sealed class CompositionColor

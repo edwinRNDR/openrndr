@@ -1,14 +1,10 @@
 package org.openrndr.svg
 
-/** Element name constants */
-internal object El {
+/** Element tag constants */
+internal object Tag {
     const val CIRCLE = "circle"
     const val DEFS = "defs"
     const val ELLIPSE = "ellipse"
-    const val FONT = "font"
-    const val FONT_FACE = "font-face"
-    const val FONT_FACE_SRC = "font-face-src"
-    const val FONT_FACE_URI = "font-face-uri"
     const val G = "g"
     const val IMAGE = "image"
     const val LINE = "line"
@@ -21,30 +17,82 @@ internal object El {
     const val SOLID_COLOR = "solidColor"
     const val STOP = "stop"
     const val SVG = "svg"
-    const val SWITCH = "switch"
     const val TBREAK = "tbreak"
     const val TEXT = "text"
     const val TEXT_AREA = "textArea"
     const val TSPAN = "tspan"
     const val USE = "use"
+
+    val containerList = listOf(
+        DEFS,
+        G,
+        SVG,
+        USE
+    )
+
+    val graphicsList = listOf(
+        CIRCLE,
+        ELLIPSE,
+        IMAGE,
+        LINE,
+        LINEAR_GRADIENT,
+        PATH,
+        POLYGON,
+        POLYLINE,
+        RADIAL_GRADIENT,
+        RECT,
+        SOLID_COLOR,
+        STOP,
+        TBREAK,
+        TEXT,
+        TEXT_AREA,
+        TSPAN
+    )
 }
 
-/**
- * Attribute name constants
- * Contains both attributes and properties but the difference is merely semantic.
- */
-internal object At {
+/** Attribute key constants */
+internal object Attr {
     const val BASE_PROFILE = "baseProfile"
     const val CLASS = "class"
-    const val COLOR = "color"
     const val CX = "cx"
     const val CY = "cy"
     const val D = "d"
+    const val DX = "dx"
+    const val DY = "dy"
+    const val GRADIENT_UNITS = "gradientUnits"
+    const val HEIGHT = "height"
+    const val ID = "id"
+    const val OFFSET = "offset"
+    const val PATH_LENGTH = "pathLength"
+    const val POINTS = "points"
+    const val PRESERVE_ASPECT_RATIO = "preserveAspectRatio"
+    const val R = "r"
+    const val ROTATE = "rotate"
+    const val RX = "rx"
+    const val RY = "ry"
+    const val SHAPE_RENDERING = "shape-rendering"
+    const val STYLE = "style"
+    const val TRANSFORM = "transform"
+    const val VERSION = "version"
+    const val VIEW_BOX = "viewBox"
+    const val WIDTH = "width"
+    const val X = "x"
+    const val X1 = "x1"
+    const val X2 = "x2"
+    const val Y = "y"
+    const val Y1 = "y1"
+    const val Y2 = "y2"
+}
+
+/**
+ * Property key constants
+ * These can also be defined in a style sheet/tag
+ */
+internal object Prop {
+    const val COLOR = "color"
     const val DIRECTION = "direction"
     const val DISPLAY = "display"
     const val DISPLAY_ALIGN = "display-align"
-    const val DX = "dx"
-    const val DY = "dy"
     const val FILL = "fill"
     const val FILL_OPACITY = "fill-opacity"
     const val FILL_RULE = "fill-rule"
@@ -53,28 +101,10 @@ internal object At {
     const val FONT_STYLE = "font-style"
     const val FONT_VARIANT = "font-variant"
     const val FONT_WEIGHT = "font-weight"
-    const val GRADIENT_UNITS = "gradientUnits"
-    const val HEIGHT = "height"
-    const val HREF = "href"
-    const val ID = "id"
-    const val LINE_INCREMENT = "line-increment"
-    const val OFFSET = "offset"
     const val OPACITY = "opacity"
-    const val PATH_LENGTH = "pathLength"
-    const val POINTS = "points"
-    const val PRESERVE_ASPECT_RATIO = "preserveAspectRatio"
-    const val R = "r"
-    const val REQUIRED_EXTENSIONS = "requiredExtensions"
-    const val REQUIRED_FEATURES = "requiredFeatures"
-    const val REQUIRED_FONTS = "requiredFonts"
-    const val REQUIRED_FORMATS = "requiredFormats"
-    const val ROTATE = "rotate"
-    const val RX = "rx"
-    const val RY = "ry"
-    const val SHAPE_RENDERING = "shape-rendering"
     const val SOLID_COLOR = "solid-color"
     const val SOLID_OPACITY = "solid-opacity"
-    const val SPACE = "space"
+    const val SPACE = "xml:space"
     const val STOP_COLOR = "stop-color"
     const val STOP_OPACITY = "stop-opacity"
     const val STROKE = "stroke"
@@ -85,19 +115,58 @@ internal object At {
     const val STROKE_MITERLIMIT = "stroke-miterlimit"
     const val STROKE_OPACITY = "stroke-opacity"
     const val STROKE_WIDTH = "stroke-width"
-    const val STYLE = "style"
-    const val SYSTEM_LANGUAGE = "system-language"
     const val TEXT_ALIGN = "text-align"
     const val TEXT_ANCHOR = "text-anchor"
-    const val TRANSFORM = "transform"
-    const val VERSION = "version"
-    const val VIEW_BOX = "viewBox"
+    const val UNICODE_BIDI = "unicode-bidi"
+    const val VECTOR_EFFECT = "vector-effect"
     const val VISIBILITY = "visibility"
-    const val WIDTH = "width"
-    const val X = "x"
-    const val X1 = "x1"
-    const val X2 = "x2"
-    const val Y = "y"
-    const val Y1 = "y1"
-    const val Y2 = "y2"
+
+    val list = listOf(
+        COLOR,
+        DIRECTION,
+        DISPLAY,
+        DISPLAY_ALIGN,
+        FILL,
+        FILL_OPACITY,
+        FILL_RULE,
+        FONT_FAMILY,
+        FONT_SIZE,
+        FONT_STYLE,
+        FONT_VARIANT,
+        FONT_WEIGHT,
+        OPACITY,
+        SOLID_COLOR,
+        SOLID_OPACITY,
+        STOP_COLOR,
+        STOP_OPACITY,
+        STROKE,
+        STROKE_DASHARRAY,
+        STROKE_DASHOFFSET,
+        STROKE_LINECAP,
+        STROKE_LINEJOIN,
+        STROKE_MITERLIMIT,
+        STROKE_OPACITY,
+        STROKE_WIDTH,
+        TEXT_ALIGN,
+        TEXT_ANCHOR,
+        UNICODE_BIDI,
+        VECTOR_EFFECT,
+        VISIBILITY
+    )
 }
+
+/** preserveAspectRatio alignment methods */
+enum class Align {
+    NONE,
+    MIN,
+    MID,
+    MAX,
+}
+
+enum class MeetOrSlice {
+    MEET,
+    SLICE
+}
+
+/** preserveAspectRatio options for both axes */
+data class Alignment(val x: Align, val y: Align, val meet: MeetOrSlice = MeetOrSlice.MEET)
