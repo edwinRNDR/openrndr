@@ -23,6 +23,7 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
             val cs = compoundIndices[index]
             val ce = if (index + 1 < compoundIndices.size) (compoundIndices[index + 1]) else commands.size
 
+            // TODO: We shouldn't be making new SVGPaths without Elements to provide
             val path = SVGPath()
             path.commands.addAll(commands.subList(cs, ce))
 

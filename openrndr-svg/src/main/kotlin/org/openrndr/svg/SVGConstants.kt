@@ -70,7 +70,7 @@ internal object Attr {
     const val ROTATE = "rotate"
     const val RX = "rx"
     const val RY = "ry"
-    const val SHAPE_RENDERING = "shape-rendering"
+    const val SPACE = "xml:space"
     const val STYLE = "style"
     const val TRANSFORM = "transform"
     const val VERSION = "version"
@@ -86,7 +86,7 @@ internal object Attr {
 
 /**
  * Property key constants
- * These can also be defined in a style sheet/tag
+ * These can also be defined in a style sheet/attribute
  */
 internal object Prop {
     const val COLOR = "color"
@@ -102,9 +102,9 @@ internal object Prop {
     const val FONT_VARIANT = "font-variant"
     const val FONT_WEIGHT = "font-weight"
     const val OPACITY = "opacity"
+    const val SHAPE_RENDERING = "shape-rendering"
     const val SOLID_COLOR = "solid-color"
     const val SOLID_OPACITY = "solid-opacity"
-    const val SPACE = "xml:space"
     const val STOP_COLOR = "stop-color"
     const val STOP_OPACITY = "stop-opacity"
     const val STROKE = "stroke"
@@ -135,6 +135,7 @@ internal object Prop {
         FONT_VARIANT,
         FONT_WEIGHT,
         OPACITY,
+        SHAPE_RENDERING,
         SOLID_COLOR,
         SOLID_OPACITY,
         STOP_COLOR,
