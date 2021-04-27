@@ -155,19 +155,3 @@ internal object Prop {
         VISIBILITY
     )
 }
-
-/** preserveAspectRatio alignment methods */
-enum class Align {
-    NONE,
-    MIN,
-    MID,
-    MAX,
-}
-
-enum class MeetOrSlice {
-    MEET,
-    SLICE
-}
-
-/** preserveAspectRatio options for both axes */
-data class Alignment(val x: Align, val y: Align, val meet: MeetOrSlice = MeetOrSlice.MEET)

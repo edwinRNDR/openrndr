@@ -1,5 +1,6 @@
 package org.openrndr.shape
 
+import org.openrndr.*
 import org.openrndr.collections.pflatMap
 import org.openrndr.collections.pforEach
 import org.openrndr.color.ColorRGBa
@@ -74,7 +75,7 @@ fun List<ShapeNodeIntersection>.merge(threshold: Double = 0.5): List<ShapeNodeIn
  * A Drawer-like interface for the creation of Compositions
  * This should be easier than creating Compositions manually
  */
-class CompositionDrawer(documentBounds: Rectangle = DefaultCompositionBounds,
+class CompositionDrawer(documentBounds: CompositionVector2 = defaultCompositionDimensions,
                         composition: Composition? = null,
                         cursor: GroupNode? = composition?.root as? GroupNode
 ) {
@@ -669,11 +670,19 @@ class CompositionDrawer(documentBounds: Rectangle = DefaultCompositionBounds,
     }
 }
 
-fun drawComposition(
-        documentBounds: Rectangle = DefaultCompositionBounds,
+// Derives Composition dimensions from current Drawer
+fun Program.drawComposition(
+        documentBounds: CompositionDimensions = CompositionDimensions(this.drawer.width.toDouble(), this.drawer.height.toDouble()),
         composition: Composition? = null,
         cursor: GroupNode? = composition?.root as? GroupNode,
         drawFunction: CompositionDrawer.() -> Unit
+): Composition = CompositionDrawer(documentBounds, composition, cursor).apply { drawFunction() }.composition
+
+fun drawComposition(
+    documentBounds: CompositionDimensions = defaultCompositionDimensions,
+    composition: Composition? = null,
+    cursor: GroupNode? = composition?.root as? GroupNode,
+    drawFunction: CompositionDrawer.() -> Unit
 ): Composition = CompositionDrawer(documentBounds, composition, cursor).apply { drawFunction() }.composition
 
 fun Composition.draw(drawFunction: CompositionDrawer.() -> Unit) {

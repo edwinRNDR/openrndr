@@ -6,7 +6,6 @@ import org.openrndr.draw.LineCap
 import org.openrndr.draw.LineJoin
 import org.openrndr.draw.ShadeStyle
 import org.openrndr.math.Matrix44
-import javax.sound.sampled.*
 import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty
 
@@ -22,12 +21,12 @@ sealed class CompositionNode {
     /**
      * parent node
      */
-    var parent: CompositionNode? = null
+    open var parent: CompositionNode? = null
 
     /**
      * local transform
      */
-    open var transform = Matrix44.IDENTITY
+    var transform = Matrix44.IDENTITY
 
     var fill: CompositionColor = InheritColor
     var stroke: CompositionColor = InheritColor
@@ -39,12 +38,13 @@ sealed class CompositionNode {
     var fillOpacity: CompositionFillOpacity = InheritFillOpacity
     var opacity: CompositionOpacity = InheritOpacity
 
+    var shadeStyle: CompositionShadeStyle = InheritShadeStyle
+
     /**
      * node attributes, these are used for loading and saving to SVG
      */
     var attributes = mutableMapOf<String, String?>()
 
-    var shadeStyle: CompositionShadeStyle = InheritShadeStyle
 
     /**
      * a map that stores user data
@@ -160,7 +160,7 @@ sealed class CompositionNode {
             }
         }
 
-    val effectiveTransform: Matrix44
+    open val effectiveTransform: Matrix44
         get() {
             return if (transform === Matrix44.IDENTITY) {
                 parent?.effectiveTransform ?: Matrix44.IDENTITY
@@ -168,6 +168,9 @@ sealed class CompositionNode {
                 transform * (parent?.effectiveTransform ?: Matrix44.IDENTITY)
             }
         }
+
+    open val effectiveCurrentTransform: Matrix44
+        get() = parent?.effectiveCurrentTransform ?: Matrix44.IDENTITY
 }
 
 infix fun KMutableProperty0<CompositionShadeStyle>.`=`(shadeStyle: ShadeStyle?) = this.set(CShadeStyle(shadeStyle))
@@ -313,18 +316,37 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
  * a [CompositionNode] that holds a single text
  */
 data class TextNode(var text: String, var contour: ShapeContour?) : CompositionNode() {
+    // TODO: This should not be Rectangle.EMPTY
     override val bounds: Rectangle
         get() = Rectangle.EMPTY
 }
 
 /**
+ * Root node, its [parent] node will always be null.
+ * Mostly due to poor abstraction.
+ */
+class RootNode(override val children: MutableList<CompositionNode> = mutableListOf()): GroupNode(children) {
+
+    @Suppress("SuspiciousVarProperty")
+    override var parent: CompositionNode? = null
+        get() = null
+
+    /**
+     * Additional transform from the viewBox
+     */
+    var currentTransform = Matrix44.IDENTITY
+
+    override val effectiveTransform: Matrix44
+        get() = transform * currentTransform
+}
+
+/**
  * A [CompositionNode] that functions as a group node
  */
-open class GroupNode(val children: MutableList<CompositionNode> = mutableListOf()) : CompositionNode() {
+open class GroupNode(open val children: MutableList<CompositionNode> = mutableListOf()) : CompositionNode() {
     override val bounds: Rectangle
         get() {
-            val b = children.map { it.bounds }.bounds
-            return b
+            return children.map { it.bounds }.bounds
         }
 
     fun copy(id: String? = this.id, parent: CompositionNode? = null, transform: Matrix44 = this.transform, fill: CompositionColor = this.fill, stroke: CompositionColor = this.stroke, children: MutableList<CompositionNode> = this.children): GroupNode {
@@ -351,10 +373,33 @@ open class GroupNode(val children: MutableList<CompositionNode> = mutableListOf(
 
 }
 
-/**
- * default composition bounds
- */
-val DefaultCompositionBounds = Rectangle(0.0, 0.0, 2676.0, 2048.0)
+val defaultCompositionDimensions = CompositionDimensions(768.0, 576.0)
+
+/** Alignment options for aspect ratio */
+enum class Align {
+    NONE,
+    MIN,
+    MID,
+    MAX,
+}
+
+enum class MeetOrSlice {
+    MEET,
+    SLICE
+}
+
+/** Alignment for each axis */
+data class Alignment(val x: Align, val y: Align, val meetOrSlice: MeetOrSlice) {
+    init {
+        // This is how we're handling the situation where only one of the Align values is NONE but the other isn't.
+        // We're just doing this to get away with the simplicity of having an alignment option for both axes
+        // while also conforming to the SVG spec.
+        require(
+            x != Align.NONE && y != Align.NONE
+                || x == Align.NONE && y != Align.NONE
+                || x != Align.NONE && y == Align.NONE
+        ) { "Either both or none of the Alignment values must be Align.NONE!" }    }
+}
 
 @Deprecated("complicated semantics")
 class GroupNodeStop(children: MutableList<CompositionNode>) : GroupNode(children)
@@ -362,9 +407,9 @@ class GroupNodeStop(children: MutableList<CompositionNode>) : GroupNode(children
 /**
  * A vector composition.
  * @param root the root node of the composition
- * @param documentBounds the document bounds [Rectangle] of the composition, serves as a hint only
+ * @param dimensions the dimensions of the composition, serves as a hint only
  */
-class Composition(val root: CompositionNode, var documentBounds: Rectangle = DefaultCompositionBounds) {
+class Composition(val root: CompositionNode, var dimensions: CompositionVector2 = defaultCompositionDimensions) {
     /**
      * svg/xml namespaces
      */

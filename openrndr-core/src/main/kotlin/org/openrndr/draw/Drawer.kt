@@ -1055,7 +1055,7 @@ class Drawer(val driver: Driver) {
         fun node(compositionNode: CompositionNode) {
             pushModel()
             pushStyle()
-            model *= compositionNode.transform
+            model *= compositionNode.transform + compositionNode.effectiveCurrentTransform
 
             when (val s = compositionNode.shadeStyle) {
                 is CShadeStyle -> {

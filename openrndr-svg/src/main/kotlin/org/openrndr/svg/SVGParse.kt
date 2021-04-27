@@ -9,47 +9,109 @@ import java.util.regex.*
 import kotlin.math.*
 
 internal object SVGParse {
-    fun viewBox(attributeValue: String): Rectangle? {
-        val viewBoxValue = attributeValue.trim()
 
-        // Matches if it has 4 numerical values separated by whitespace, commas or both
-        val viewBoxRegex = "(?>\\d+[,\\s]*){3}\\d+".toRegex()
-        viewBoxRegex.matchEntire(viewBoxValue) ?: return null
+    // Matches a single numeric value
+    private val numRegex = Regex("[+-]?\\d+")
 
-        val delimiterRegex = "[,\\s]*".toRegex()
-        val (minX, minY, width, height) = viewBoxValue.split(delimiterRegex).map { it.toDouble() }
+    // Used in combination with another pattern as just it's a positive lookahead
+    // and you generally don't actually want to match whitespace
+    private val sepRegex = Regex("(?=\\s*,?\\s*)")
 
-        return if (width >= 0 && height >= 0) {
-            Rectangle(minX, minY, width, height)
-        } else {
-            Rectangle(0.0, 0.0, 0.0, 0.0)
-        }
-    }
+    // Captures a length value and its unit type if present
+    private val lenRegex = Regex("(?<value>$numRegex)(?<type>in|pc|pt|px|cm|mm|q|em|ex|ch|%)?")
+    private val numListRegex = Regex("$numRegex$sepRegex")
 
-    fun preserveAspectRatio(attributeValue: String): Alignment {
-        val aspectRatioValue = attributeValue.trim().let {
-            // TODO: Handle this according to spec
-            if (it.startsWith("defer")) {
-                it.drop(6)
-            } else {
-                it
+    // Captures alignment value and/or the meet value
+    private val aspecRatioRegex = Regex("(?<align>[xy](?:Min|Mid|Max)[XY](?:Min|Mid|Max))|(?<meet>(?<=\\s|\\A)meet|slice)")
+
+    fun viewBox(element: Element): Rectangle? {
+        val viewBoxValue = element.attr(Attr.VIEW_BOX)
+
+        val (minX, minY, width, height) = numListRegex.findAll(viewBoxValue).let {
+            val list = it.toList()
+            when (list.size) {
+                2 -> listOf(list[0].value.toDouble(), list[1].value.toDouble(), 0.0, 0.0)
+                4 -> list.map { item -> item.value.toDouble() }
+                else -> return null
             }
         }
 
-        return when (aspectRatioValue) {
-            "none" -> Alignment(Align.NONE, Align.NONE)
-            "xMinYMin" -> Alignment(Align.MIN, Align.MIN)
-            "xMidYMin" -> Alignment(Align.MID, Align.MIN)
-            "xMaxYMin" -> Alignment(Align.MAX, Align.MIN)
-            "xMinYMid" -> Alignment(Align.MIN, Align.MID)
-            "xMaxYMid" -> Alignment(Align.MAX, Align.MID)
-            "xMinYMax" -> Alignment(Align.MIN, Align.MAX)
-            "xMidYMax" -> Alignment(Align.MID, Align.MAX)
-            "xMaxYMax" -> Alignment(Align.MAX, Align.MAX)
+        return Rectangle(minX, minY, width.coerceAtLeast(0.0), height.coerceAtLeast(0.0))
+    }
+
+    fun preserveAspectRatio(element: Element): Alignment {
+        val aspectRatioValue = element.attr(Attr.VIEW_BOX)
+
+        val (alignmentValue, meetValue) = aspecRatioRegex.matchEntire(aspectRatioValue).let {
+            val value = it?.groups?.get("align")?.value ?: "xMidYMid"
+            val type = it?.groups?.get("meet")?.value ?: "meet"
+
+            value to type
+        }
+
+        val meet = when (meetValue) {
+            "slice" -> MeetOrSlice.SLICE
+            // Lacuna value
+            else -> MeetOrSlice.MEET
+        }
+
+        return when (alignmentValue) {
+            "none" -> Alignment(Align.NONE, Align.NONE, meet)
+            "xMinYMin" -> Alignment(Align.MIN, Align.MIN, meet)
+            "xMidYMin" -> Alignment(Align.MID, Align.MIN, meet)
+            "xMaxYMin" -> Alignment(Align.MAX, Align.MIN, meet)
+            "xMinYMid" -> Alignment(Align.MIN, Align.MID, meet)
+            "xMaxYMid" -> Alignment(Align.MAX, Align.MID, meet)
+            "xMinYMax" -> Alignment(Align.MIN, Align.MAX, meet)
+            "xMidYMax" -> Alignment(Align.MID, Align.MAX, meet)
+            "xMaxYMax" -> Alignment(Align.MAX, Align.MAX, meet)
             // The lacuna value, "xMidYMid"
-            else -> Alignment(Align.MID, Align.MID)
+            else -> Alignment(Align.MID, Align.MID, meet)
         }
     }
+
+    fun dimensions(element: Element): CompositionDimensions {
+        val values = listOf(Attr.WIDTH, Attr.HEIGHT).map { attribute ->
+            element.attr(attribute).let {
+                it.ifEmpty { "0" }
+            }
+        }
+
+        val lengths = values.map { str ->
+            lenRegex.matchEntire(str).let {
+                val value = it?.groups?.get("value")?.value?.toDouble() ?: 0.0
+                val type = Length.UnitType.valueOf(
+                    it?.groups?.get("type")?.value?.toUpperCase() ?: "PX"
+                )
+
+                Length(value, type)
+            }
+        }
+
+        return CompositionDimensions(lengths[0], lengths[1])
+    }
+
+    fun position(element: Element): CompositionVector2 {
+        val values = listOf(Attr.X, Attr.Y).map { attribute ->
+            element.attr(attribute).let {
+                it.ifEmpty { "0" }
+            }
+        }
+
+        val lengths = values.map { str ->
+            lenRegex.matchEntire(str).let {
+                val value = it?.groups?.get("value")?.value?.toDouble() ?: 0.0
+                val type = Length.UnitType.valueOf(
+                    it?.groups?.get("type")?.value?.toUpperCase() ?: "PX"
+                )
+
+                Length(value, type)
+            }
+        }
+
+        return CompositionVector2(lengths[0], lengths[1])
+    }
+
 
     fun transform(element: Element): Matrix44 {
         var transform = Matrix44.IDENTITY
@@ -215,7 +277,6 @@ internal object SVGParse {
 
         return ellipsePath(x, y, width, height)
     }
-
 
     fun rectangle(element: Element): List<Command> {
         val x = element.attr(Attr.X).let { if (it.isEmpty()) 0.0 else it.toDouble() }

@@ -5,6 +5,7 @@ import org.jsoup.nodes.*
 import org.jsoup.parser.Parser
 import org.openrndr.color.ColorRGBa
 import org.openrndr.math.*
+import org.openrndr.math.transforms.*
 import org.openrndr.shape.*
 import java.io.File
 import java.net.MalformedURLException
@@ -57,38 +58,6 @@ internal class Command(val op: String, vararg val operands: Double) {
 
 // internal class SVGImage(val url: String, val x: Double?, val y: Double?, val width: Double?, val height: Double?) : SVGElement()
 
-internal class SVGGroup(val element: Element, val elements: MutableList<SVGElement> = mutableListOf()) : SVGElement(element) {
-
-    init {
-        element.attributes().forEach {
-            if (it.key == Attr.STYLE) {
-                inlineStyles(it)
-            } else {
-                handleAttribute(it)
-            }
-        }
-
-        handleChildren()
-    }
-
-    private fun handleChildren() {
-        this.element.children().forEach { child ->
-            when (child.tagName()) {
-                in Tag.graphicsList -> elements.add(SVGPath(child))
-                else -> elements.add(SVGGroup(child))
-            }
-        }
-    }
-
-    override fun handleAttribute(attribute: Attribute) {
-        when (attribute.key) {
-            // Attributes can also be style properties, in which case they're passed on
-            in Prop.list -> styleProperty(attribute.key, attribute.value)
-            Attr.TRANSFORM -> transform = SVGParse.transform(this.element)
-        }
-    }
-}
-
 internal fun Double.toBoolean() = this.toInt() == 1
 
 internal class SVGDocument(private val root: SVGElement, val namespaces: Map<String, String>) {
@@ -97,6 +66,11 @@ internal class SVGDocument(private val root: SVGElement, val namespaces: Map<Str
     }
 
     private fun convertElement(svgElem: SVGElement): CompositionNode = when (svgElem) {
+        is SVGSVGElement -> RootNode().apply {
+            this.id = svgElem.id
+            this.currentTransform = svgElem.currentTransform
+            svgElem.elements.mapTo(children) { convertElement(it) }
+        }
         is SVGGroup -> GroupNode().apply {
             this.id = svgElem.id
             svgElem.elements.mapTo(children) { convertElement(it).also { x -> x.parent = this@apply } }
@@ -114,7 +88,6 @@ internal class SVGDocument(private val root: SVGElement, val namespaces: Map<Str
                 this.id = svgElem.id
             }
         }
-        else -> throw Exception("Unknown SVGElement")
     }.apply {
         transform = svgElem.transform
         // attributes.putAll(svgElem.attributes)
@@ -147,7 +120,7 @@ internal class SVGLoader {
             println("SVG baseProfile \"$baseProfile\" is not supported!")
         }
 
-        val rootGroup = SVGGroup(root)
+        val rootGroup = SVGSVGElement(root)
         return SVGDocument(rootGroup, namespaces)
     }
 

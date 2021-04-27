@@ -41,7 +41,6 @@ fun writeSVG(composition: Composition,
              topLevelId: String = "openrndr-svg"): String {
     val sb = StringBuilder()
     sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-    sb.append("<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1 Tiny//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11-tiny.dtd\">\n")
 
     val defaultNamespaces = mapOf(
             "xmlns" to "http://www.w3.org/2000/svg",
@@ -52,14 +51,13 @@ fun writeSVG(composition: Composition,
         """$k="$v""""
     }.joinToString(" ")
 
-
     fun Rectangle.svgAttributes() = mapOf("x" to corner.x.toInt().toString(),
             "y" to corner.y.toInt().toString(),
             "width" to width.toInt(),
             "height" to height.toInt())
             .map { """${it.key}="${it.value}px"""" }.joinToString(" ")
 
-    sb.append("<svg version=\"1.2\" baseProfile=\"tiny\" id=\"$topLevelId\" $namespaces ${composition.documentBounds.svgAttributes()}>")
+    sb.append("<svg version=\"1.2\" baseProfile=\"tiny\" id=\"$topLevelId\" $namespaces ${composition.dimensions}>")
 
     var textPathID = 0
     process(composition.root) { stage ->
@@ -71,7 +69,7 @@ fun writeSVG(composition: Composition,
                             listOf(svgId, transformAttribute, svgAttributes)
                                     .filter { a -> a.isNotBlank() }
                                     .joinToString(" ")
-                    sb.append("<g $attributes>\n")
+                    sb.append("<g${" $attributes"}>\n")
                 }
                 is ShapeNode -> {
                     val fillAttribute = fill.let { f ->
