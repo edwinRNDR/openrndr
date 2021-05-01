@@ -3,29 +3,44 @@ package org.openrndr.shape
 import org.openrndr.math.*
 import org.openrndr.shape.Length.UnitType.*
 
-
-open class CompositionVector2(val x: Length, val y: Length) {
+data class CompositionVector2(val x: Length, val y: Length) {
     constructor(x: Double, y: Double) : this(Length(x), Length(y))
 
     companion object {
         val ZERO = CompositionVector2(0.0, 0.0)
     }
 
-    override fun toString() = "x=\"$x\" y=\"$y\""
-
-    val toVector2: Vector2
-        get() = Vector2(x.pixels, y.pixels)
+    // TODO! Add actual unit conversion
+    val vector2: Vector2
+        get() = Vector2(x.toPixels(), y.toPixels())
 }
 
-/**
- * Composition dimensions, the difference from [CompositionVector2]
- * is mostly semantic.
- * It also has a different `toString()` implementation.
- */
-data class CompositionDimensions(val width: Length, val height: Length) :
-    CompositionVector2(width, height) {
-    constructor(x: Double, y: Double) : this(Length(x), Length(y))
-    override fun toString() = "width=\"$width\" height=\"$height\""
+data class CompositionDimensions(val x: Length, val y: Length, val width: Length, val height: Length) {
+    constructor(x: Double, y: Double, width: Double, height: Double) : this(
+        Length(x),
+        Length(y),
+        Length(width),
+        Length(height)
+    )
+
+    constructor(position: CompositionVector2, dimensions: CompositionVector2) : this(
+        position.x,
+        position.y,
+        dimensions.x,
+        dimensions.y
+    )
+
+    companion object {
+        val ZERO = CompositionDimensions(0.0, 0.0, 0.0, 0.0)
+    }
+
+    val position: CompositionVector2
+        get() = CompositionVector2(x, y)
+
+    val dimensions: CompositionVector2
+        get() = CompositionVector2(width, height)
+
+    override fun toString() = "x=\"$x\" y=\"$y\" width=\"$width\" height=\"$height\""
 }
 
 /**
@@ -49,6 +64,8 @@ data class Length(val units: Double, val type: UnitType = PX) {
         PERCENT
     }
 
+    fun toPixels(): Double = units
+
     override fun toString(): String {
         return when (type) {
             // Pixels are implied when unit type is not present, so why include them?
@@ -57,9 +74,6 @@ data class Length(val units: Double, val type: UnitType = PX) {
             else -> "$units${type.name.toLowerCase()}"
         }
     }
-
-    val pixels: Double
-        get() = units
 }
 
 // TODO: Add more of these

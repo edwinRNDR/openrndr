@@ -64,8 +64,7 @@ internal class SVGSVGElement(element: Element): SVGGroup(element), SVGFitToViewB
     override var viewBox: Rectangle? = SVGParse.viewBox(this.element)
     override var preserveAspectRatio: Alignment = SVGParse.preserveAspectRatio(this.element)
 
-    override var position = SVGParse.position(this.element)
-    override var dimensions = SVGParse.dimensions(this.element)
+    override var bounds = SVGParse.bounds(this.element)
     /** Represents the scale and translate applied to the viewport */
     override var currentTransform = calculateViewportTransform()
 
@@ -79,8 +78,8 @@ internal class SVGSVGElement(element: Element): SVGGroup(element), SVGFitToViewB
                 // TODO! Someone tell me how to shorten this
                 val vbCorner = viewBox!!.corner
                 val vbDims = viewBox!!.dimensions
-                val eCorner = position.toVector2
-                val eDims = dimensions.toVector2
+                val eCorner = bounds.position.vector2
+                val eDims = bounds.dimensions.vector2
                 val (xAlign, yAlign, meetOrSlice) = preserveAspectRatio
 
                 var scale = eDims / vbDims

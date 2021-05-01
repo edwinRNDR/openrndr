@@ -13,16 +13,19 @@ internal object SVGParse {
     // Matches a single numeric value
     private val numRegex = Regex("[+-]?\\d+")
 
-    // Used in combination with another pattern as just it's a positive lookahead
+    // Comma and whitespace separatorm, used in combination with
+    // another pattern as just it's a positive lookahead
     // and you generally don't actually want to match whitespace
-    private val sepRegex = Regex("(?=\\s*,?\\s*)")
+    private val cRegex = Regex("(?=\\s*,?\\s*)")
+    // Strict separator regex, allows only whitespace or beginning/ending of string
+    private val sRegex = Regex("(?:\\s|\\A|\\Z)+")
 
     // Captures a length value and its unit type if present
     private val lenRegex = Regex("(?<value>$numRegex)(?<type>in|pc|pt|px|cm|mm|q|em|ex|ch|%)?")
-    private val numListRegex = Regex("$numRegex$sepRegex")
+    private val numListRegex = Regex("$numRegex$cRegex")
 
     // Captures alignment value and/or the meet value
-    private val aspecRatioRegex = Regex("(?<align>[xy](?:Min|Mid|Max)[XY](?:Min|Mid|Max))|(?<meet>(?<=\\s|\\A)meet|slice)")
+    private val aspectRatioRegex = Regex("$sRegex(?<align>[xy](?:Min|Mid|Max)[XY](?:Min|Mid|Max))*$sRegex(?<meet>meet|slice)*$sRegex")
 
     fun viewBox(element: Element): Rectangle? {
         val viewBoxValue = element.attr(Attr.VIEW_BOX)
@@ -40,11 +43,11 @@ internal object SVGParse {
     }
 
     fun preserveAspectRatio(element: Element): Alignment {
-        val aspectRatioValue = element.attr(Attr.VIEW_BOX)
+        val aspectRatioValue = element.attr(Attr.PRESERVE_ASPECT_RATIO)
 
-        val (alignmentValue, meetValue) = aspecRatioRegex.matchEntire(aspectRatioValue).let {
-            val value = it?.groups?.get("align")?.value ?: "xMidYMid"
-            val type = it?.groups?.get("meet")?.value ?: "meet"
+        val (alignmentValue, meetValue) = aspectRatioRegex.matchEntire(aspectRatioValue).let {
+            val value = (it?.groups as? MatchNamedGroupCollection)?.get("align")?.value ?: "xMidYMid"
+            val type = (it?.groups as? MatchNamedGroupCollection)?.get("meet")?.value ?: "meet"
 
             value to type
         }
@@ -70,48 +73,27 @@ internal object SVGParse {
         }
     }
 
-    fun dimensions(element: Element): CompositionDimensions {
-        val values = listOf(Attr.WIDTH, Attr.HEIGHT).map { attribute ->
+    fun bounds(element: Element): CompositionDimensions {
+        val values = listOf(Attr.X, Attr.Y, Attr.WIDTH, Attr.HEIGHT).map { attribute ->
             element.attr(attribute).let {
                 it.ifEmpty { "0" }
             }
         }
 
-        val lengths = values.map { str ->
+        // There's no way this'll throw an OOB, right?
+        val (x, y, width, height) = values.map { str ->
             lenRegex.matchEntire(str).let {
-                val value = it?.groups?.get("value")?.value?.toDouble() ?: 0.0
+                val value = (it?.groups as? MatchNamedGroupCollection)?.get("value")?.value?.toDouble() ?: 0.0
                 val type = Length.UnitType.valueOf(
-                    it?.groups?.get("type")?.value?.toUpperCase() ?: "PX"
+                    (it?.groups as? MatchNamedGroupCollection)?.get("type")?.value?.toUpperCase() ?: "PX"
                 )
 
                 Length(value, type)
             }
         }
 
-        return CompositionDimensions(lengths[0], lengths[1])
+        return CompositionDimensions(x, y, width, height)
     }
-
-    fun position(element: Element): CompositionVector2 {
-        val values = listOf(Attr.X, Attr.Y).map { attribute ->
-            element.attr(attribute).let {
-                it.ifEmpty { "0" }
-            }
-        }
-
-        val lengths = values.map { str ->
-            lenRegex.matchEntire(str).let {
-                val value = it?.groups?.get("value")?.value?.toDouble() ?: 0.0
-                val type = Length.UnitType.valueOf(
-                    it?.groups?.get("type")?.value?.toUpperCase() ?: "PX"
-                )
-
-                Length(value, type)
-            }
-        }
-
-        return CompositionVector2(lengths[0], lengths[1])
-    }
-
 
     fun transform(element: Element): Matrix44 {
         var transform = Matrix44.IDENTITY

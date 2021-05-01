@@ -373,7 +373,7 @@ open class GroupNode(open val children: MutableList<CompositionNode> = mutableLi
 
 }
 
-val defaultCompositionDimensions = CompositionDimensions(768.0, 576.0)
+val defaultCompositionDimensions = CompositionDimensions(0.0, 0.0, 768.0, 576.0)
 
 /** Alignment options for aspect ratio */
 enum class Align {
@@ -409,7 +409,7 @@ class GroupNodeStop(children: MutableList<CompositionNode>) : GroupNode(children
  * @param root the root node of the composition
  * @param dimensions the dimensions of the composition, serves as a hint only
  */
-class Composition(val root: CompositionNode, var dimensions: CompositionVector2 = defaultCompositionDimensions) {
+class Composition(val root: CompositionNode, var dimensions: CompositionDimensions = defaultCompositionDimensions) {
     /**
      * svg/xml namespaces
      */

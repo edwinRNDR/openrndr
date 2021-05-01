@@ -75,7 +75,7 @@ fun List<ShapeNodeIntersection>.merge(threshold: Double = 0.5): List<ShapeNodeIn
  * A Drawer-like interface for the creation of Compositions
  * This should be easier than creating Compositions manually
  */
-class CompositionDrawer(documentBounds: CompositionVector2 = defaultCompositionDimensions,
+class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositionDimensions,
                         composition: Composition? = null,
                         cursor: GroupNode? = composition?.root as? GroupNode
 ) {
@@ -672,7 +672,7 @@ class CompositionDrawer(documentBounds: CompositionVector2 = defaultCompositionD
 
 // Derives Composition dimensions from current Drawer
 fun Program.drawComposition(
-        documentBounds: CompositionDimensions = CompositionDimensions(this.drawer.width.toDouble(), this.drawer.height.toDouble()),
+        documentBounds: CompositionDimensions = CompositionDimensions(0.0, 0.0, this.drawer.width.toDouble(), this.drawer.height.toDouble()),
         composition: Composition? = null,
         cursor: GroupNode? = composition?.root as? GroupNode,
         drawFunction: CompositionDrawer.() -> Unit
