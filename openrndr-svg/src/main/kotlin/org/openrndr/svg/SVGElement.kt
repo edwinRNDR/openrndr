@@ -9,6 +9,8 @@ internal sealed class SVGElement(element: Element?) {
     var id: String = element?.id() ?: ""
     val className: String = element?.className() ?: ""
 
+    var visible = true
+
     var transform: Matrix44 = Matrix44.IDENTITY
 
     var fill: CompositionColor = InheritColor
@@ -44,6 +46,7 @@ internal sealed class SVGElement(element: Element?) {
             Prop.STROKE_OPACITY -> strokeOpacity = StrokeOpacity(value.toDouble())
             Prop.STROKE_WIDTH -> strokeWeight = StrokeWeight(value.toDouble())
             Prop.FILL_OPACITY -> fillOpacity = FillOpacity(value.toDouble())
+            Prop.OPACITY -> opacity = Opacity(value.toDouble())
         }
     }
 
@@ -60,11 +63,10 @@ internal sealed class SVGElement(element: Element?) {
 }
 
 /** <svg> element */
-internal class SVGSVGElement(element: Element): SVGGroup(element), SVGDimensions {
+internal class SVGSVGElement(element: Element): SVGGroup(element) {
     var viewBox: Rectangle? = SVGParse.viewBox(this.element)
     var preserveAspectRatio: Alignment = SVGParse.preserveAspectRatio(this.element)
-
-    override var bounds = SVGParse.bounds(this.element)
+    var bounds = SVGParse.bounds(this.element)
 }
 
 /** <g> element but practically works with everything that has child elements */

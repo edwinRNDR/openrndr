@@ -304,7 +304,6 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
      */
     val effectiveShape
         get() = shape.transform(effectiveTransform)
-
 }
 
 /**
@@ -325,6 +324,7 @@ open class GroupNode(open val children: MutableList<CompositionNode> = mutableLi
             return children.map { it.bounds }.bounds
         }
 
+    // TODO! This is lacking in property cloning
     fun copy(id: String? = this.id, parent: CompositionNode? = null, transform: Matrix44 = this.transform, fill: CompositionColor = this.fill, stroke: CompositionColor = this.stroke, children: MutableList<CompositionNode> = this.children): GroupNode {
         return GroupNode(children).also {
             it.id = id
@@ -372,8 +372,7 @@ data class Alignment(val x: Align, val y: Align, val meetOrSlice: MeetOrSlice) {
         // while also conforming to the SVG spec.
         require(
             x != Align.NONE && y != Align.NONE
-                || x == Align.NONE && y != Align.NONE
-                || x != Align.NONE && y == Align.NONE
+                || x == Align.NONE && y == Align.NONE
         ) { "Either both or none of the Alignment values must be Align.NONE!" }    }
 }
 
@@ -386,9 +385,8 @@ class GroupNodeStop(children: MutableList<CompositionNode>) : GroupNode(children
  * @param bounds the dimensions of the composition
  */
 class Composition(val root: CompositionNode, var bounds: CompositionDimensions = defaultCompositionDimensions) {
-    /**
-     * svg/xml namespaces
-     */
+
+    /** SVG/XML namespaces */
     val namespaces = mutableMapOf<String, String>()
 
     /** Unitless viewbox */

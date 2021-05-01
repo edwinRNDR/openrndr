@@ -452,11 +452,23 @@ class Drawer(val driver: Driver) {
         get() = drawStyle.lineCap
 
 
+    /**
+     * The active line join method
+     * @see strokeWeight
+     * @see stroke
+     * @see lineCap
+     */
     var lineJoin: LineJoin
         set(value) {
             drawStyle.lineJoin = value
         }
         get() = drawStyle.lineJoin
+
+    var miterlimit: Double
+        set(value) {
+            drawStyle.miterLimit = value
+        }
+        get() = drawStyle.miterLimit
 
     /**
      * The active fontmap, default is null
@@ -1047,47 +1059,53 @@ class Drawer(val driver: Driver) {
      * @see shapes
      */
     fun composition(composition: Composition) {
+        pushModel()
         pushStyle()
         fill = ColorRGBa.BLACK
         stroke = null
 
+        // viewBox transformation
+        model *= composition.calculateViewportTransform()
+
         fun node(compositionNode: CompositionNode) {
             pushModel()
             pushStyle()
-            model *= compositionNode.effectiveTransform * composition.calculateViewportTransform()
+            model *= compositionNode.effectiveTransform
 
-            when (val s = compositionNode.shadeStyle) {
+            @Suppress("NON_EXHAUSTIVE_WHEN_ON_SEALED_CLASS")
+            when (compositionNode.shadeStyle) {
                 is CShadeStyle -> {
-                    shadeStyle = s.shadeStyle
+                    shadeStyle.let {
+                        compositionNode.shadeStyle
+                    }
                 }
             }
 
             when (compositionNode) {
                 is ShapeNode -> {
                     compositionNode.fill.let {
-                        if (it is Color) {
-                            fill = it.color
-                        }
+                        if (it is Color) fill = it.color
                     }
                     compositionNode.fillOpacity.let {
-                        if (it is FillOpacity) {
-                            fill = fill?.opacify(it.fillOpacity)
-                        }
+                        if (it is FillOpacity) fill = fill?.opacify(it.fillOpacity)
                     }
                     compositionNode.stroke.let {
-                        if (it is Color) {
-                            stroke = it.color
-                        }
+                        if (it is Color) stroke = it.color
                     }
                     compositionNode.strokeOpacity.let {
-                        if (it is StrokeOpacity) {
-                            stroke = stroke?.opacify(it.strokeOpacity)
-                        }
+                        if (it is StrokeOpacity) stroke = stroke?.opacify(it.strokeOpacity)
                     }
                     compositionNode.strokeWeight.let {
-                        if (it is StrokeWeight) {
-                            strokeWeight = it.weight
-                        }
+                        if (it is StrokeWeight) strokeWeight = it.weight
+                    }
+                    compositionNode.miterlimit.let {
+                        if (it is Miterlimit) miterlimit = it.limit
+                    }
+                    compositionNode.lineCap.let {
+                        if (it is org.openrndr.shape.LineCap) lineCap = it.cap
+                    }
+                    compositionNode.lineJoin.let {
+                        if (it is org.openrndr.shape.LineJoin) lineJoin = it.join
                     }
                     compositionNode.opacity.let {
                         if (it is Opacity) {
@@ -1104,12 +1122,11 @@ class Drawer(val driver: Driver) {
                 is GroupNode -> compositionNode.children.forEach { node(it) }
             }
 
-
-
             popModel()
             popStyle()
         }
         node(composition.root)
+        popModel()
         popStyle()
     }
 
@@ -1142,7 +1159,6 @@ class Drawer(val driver: Driver) {
     fun image(colorBuffer: ColorBuffer, rectangles: List<Pair<Rectangle, Rectangle>>) {
         imageDrawer.drawImage(context, drawStyle, colorBuffer, rectangles)
     }
-
 
     /**
      * Draws an image using an ArrayTexture as source
