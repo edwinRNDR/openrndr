@@ -14,7 +14,6 @@ internal object Tag {
     const val POLYLINE = "polyline"
     const val RADIAL_GRADIENT = "radialGradient"
     const val RECT = "rect"
-    const val SOLID_COLOR = "solidColor"
     const val STOP = "stop"
     const val SVG = "svg"
     const val TBREAK = "tbreak"
@@ -35,13 +34,10 @@ internal object Tag {
         ELLIPSE,
         IMAGE,
         LINE,
-        LINEAR_GRADIENT,
         PATH,
         POLYGON,
         POLYLINE,
-        RADIAL_GRADIENT,
         RECT,
-        SOLID_COLOR,
         STOP,
         TBREAK,
         TEXT,
@@ -103,8 +99,6 @@ internal object Prop {
     const val FONT_WEIGHT = "font-weight"
     const val OPACITY = "opacity"
     const val SHAPE_RENDERING = "shape-rendering"
-    const val SOLID_COLOR = "solid-color"
-    const val SOLID_OPACITY = "solid-opacity"
     const val STOP_COLOR = "stop-color"
     const val STOP_OPACITY = "stop-opacity"
     const val STROKE = "stroke"
@@ -136,8 +130,6 @@ internal object Prop {
         FONT_WEIGHT,
         OPACITY,
         SHAPE_RENDERING,
-        SOLID_COLOR,
-        SOLID_OPACITY,
         STOP_COLOR,
         STOP_OPACITY,
         STROKE,
