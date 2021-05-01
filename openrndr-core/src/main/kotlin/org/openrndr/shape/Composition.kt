@@ -168,9 +168,6 @@ sealed class CompositionNode {
                 transform * (parent?.effectiveTransform ?: Matrix44.IDENTITY)
             }
         }
-
-    open val effectiveCurrentTransform: Matrix44
-        get() = parent?.effectiveCurrentTransform ?: Matrix44.IDENTITY
 }
 
 infix fun KMutableProperty0<CompositionShadeStyle>.`=`(shadeStyle: ShadeStyle?) = this.set(CShadeStyle(shadeStyle))

@@ -78,6 +78,8 @@ internal class SVGSVGElement(element: Element): SVGGroup(element), SVGFitToViewB
                 // TODO! Someone tell me how to shorten this
                 val vbCorner = viewBox!!.corner
                 val vbDims = viewBox!!.dimensions
+                // TODO! Do we need to know DPI at this point?
+                // Should this function be in Composition.kt instead?
                 val eCorner = bounds.position.vector2
                 val eDims = bounds.dimensions.vector2
                 val (xAlign, yAlign, meetOrSlice) = preserveAspectRatio
@@ -348,7 +350,7 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
                         closed = true
                     }
                     else -> {
-                        error("unsupported op: ${command.op}, is this an SVG Tiny 1.x document?")
+                        error("unsupported path operand: ${command.op}")
                     }
                 }
             }

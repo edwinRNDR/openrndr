@@ -17,6 +17,7 @@ internal object SVGParse {
     // another pattern as just it's a positive lookahead
     // and you generally don't actually want to match whitespace
     private val cRegex = Regex("(?=\\s*,?\\s*)")
+
     // Strict separator regex, allows only whitespace or beginning/ending of string
     private val sRegex = Regex("(?:\\s|\\A|\\Z)+")
 
@@ -24,8 +25,11 @@ internal object SVGParse {
     private val lenRegex = Regex("(?<value>$numRegex)(?<type>in|pc|pt|px|cm|mm|q|em|ex|ch|%)?")
     private val numListRegex = Regex("$numRegex$cRegex")
 
+    private val alignRegex = Regex("(?<align>[xy](?:Min|Mid|Max)[XY](?:Min|Mid|Max))*")
+    private val meetRegex = Regex("(?<meet>meet|slice)*")
+
     // Captures alignment value and/or the meet value
-    private val aspectRatioRegex = Regex("$sRegex(?<align>[xy](?:Min|Mid|Max)[XY](?:Min|Mid|Max))*$sRegex(?<meet>meet|slice)*$sRegex")
+    private val aspectRatioRegex = Regex("$sRegex$alignRegex$sRegex$meetRegex$sRegex")
 
     fun viewBox(element: Element): Rectangle? {
         val viewBoxValue = element.attr(Attr.VIEW_BOX)
@@ -33,7 +37,15 @@ internal object SVGParse {
         val (minX, minY, width, height) = numListRegex.findAll(viewBoxValue).let {
             val list = it.toList()
             when (list.size) {
-                2 -> listOf(list[0].value.toDouble(), list[1].value.toDouble(), 0.0, 0.0)
+                // Early return and signal that the element should not be rendered at all
+                1 -> if (list[0].value.toDouble() == 0.0) {
+                    return null
+                } else {
+                    // Interpret as height
+                    listOf(0.0, 0.0, 0.0, list[0].value.toDouble())
+                }
+                2 -> listOf(0.0, 0.0, list[0].value.toDouble(), list[1].value.toDouble())
+                3 -> listOf(0.0, list[0].value.toDouble(), list[1].value.toDouble(), list[2].value.toDouble())
                 4 -> list.map { item -> item.value.toDouble() }
                 else -> return null
             }
