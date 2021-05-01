@@ -61,16 +61,19 @@ internal class Command(val op: String, vararg val operands: Double) {
 internal fun Double.toBoolean() = this.toInt() == 1
 
 internal class SVGDocument(private val root: SVGElement, val namespaces: Map<String, String>) {
-    fun composition(): Composition = Composition(convertElement(root)).apply {
+    fun composition(): Composition = Composition(
+        convertElement(root),
+        (root as? SVGSVGElement)?.bounds ?: defaultCompositionDimensions
+
+    ).apply {
         namespaces.putAll(this@SVGDocument.namespaces)
+        if (this@SVGDocument.root is SVGSVGElement) {
+            this.viewBox = this@SVGDocument.root.viewBox
+            this.preserveAspectRatio = this@SVGDocument.root.preserveAspectRatio
+        }
     }
 
     private fun convertElement(svgElem: SVGElement): CompositionNode = when (svgElem) {
-        is SVGSVGElement -> RootNode().apply {
-            this.id = svgElem.id
-            this.currentTransform = svgElem.currentTransform
-            svgElem.elements.mapTo(children) { convertElement(it) }
-        }
         is SVGGroup -> GroupNode().apply {
             this.id = svgElem.id
             svgElem.elements.mapTo(children) { convertElement(it).also { x -> x.parent = this@apply } }

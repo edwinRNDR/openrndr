@@ -5,7 +5,9 @@ import org.openrndr.draw.ColorBuffer
 import org.openrndr.draw.LineCap
 import org.openrndr.draw.LineJoin
 import org.openrndr.draw.ShadeStyle
-import org.openrndr.math.Matrix44
+import org.openrndr.math.*
+import org.openrndr.math.transforms.*
+import kotlin.math.*
 import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty
 
@@ -18,14 +20,10 @@ sealed class CompositionNode {
      */
     var id: String? = null
 
-    /**
-     * parent node
-     */
-    open var parent: CompositionNode? = null
+    var parent: CompositionNode? = null
 
-    /**
-     * local transform
-     */
+    var visible: Boolean = true
+
     var transform = Matrix44.IDENTITY
 
     var fill: CompositionColor = InheritColor
@@ -319,25 +317,6 @@ data class TextNode(var text: String, var contour: ShapeContour?) : CompositionN
 }
 
 /**
- * Root node, its [parent] node will always be null.
- * Mostly due to poor abstraction.
- */
-class RootNode(override val children: MutableList<CompositionNode> = mutableListOf()): GroupNode(children) {
-
-    @Suppress("SuspiciousVarProperty")
-    override var parent: CompositionNode? = null
-        get() = null
-
-    /**
-     * Additional transform from the viewBox
-     */
-    var currentTransform = Matrix44.IDENTITY
-
-    override val effectiveTransform: Matrix44
-        get() = transform * currentTransform
-}
-
-/**
  * A [CompositionNode] that functions as a group node
  */
 open class GroupNode(open val children: MutableList<CompositionNode> = mutableListOf()) : CompositionNode() {
@@ -404,13 +383,19 @@ class GroupNodeStop(children: MutableList<CompositionNode>) : GroupNode(children
 /**
  * A vector composition.
  * @param root the root node of the composition
- * @param dimensions the dimensions of the composition, serves as a hint only
+ * @param bounds the dimensions of the composition
  */
-class Composition(val root: CompositionNode, var dimensions: CompositionDimensions = defaultCompositionDimensions) {
+class Composition(val root: CompositionNode, var bounds: CompositionDimensions = defaultCompositionDimensions) {
     /**
      * svg/xml namespaces
      */
     val namespaces = mutableMapOf<String, String>()
+
+    /** Unitless viewbox */
+    var viewBox: Rectangle? = null
+
+    /** Specifies how the [Composition] scales up */
+    var preserveAspectRatio: Alignment = Alignment(Align.MID, Align.MID, MeetOrSlice.MEET)
 
     fun findShapes() = root.findShapes()
     fun findShape(id: String): ShapeNode? {
@@ -428,6 +413,62 @@ class Composition(val root: CompositionNode, var dimensions: CompositionDimensio
     }
 
     fun clear() = (root as? GroupNode)?.children?.clear()
+
+    /**
+     * Calculates effective viewport transformation using [viewBox] and [preserveAspectRatio].
+     * As per [the SVG 2.0 spec](https://svgwg.org/svg2-draft/single-page.html#coords-ComputingAViewportsTransform)
+     */
+    fun calculateViewportTransform(): Matrix44 {
+        return when {
+            viewBox != null -> {
+                // TODO! Someone tell me how to shorten this
+                val vbCorner = viewBox!!.corner
+                val vbDims = viewBox!!.dimensions
+                // TODO! Do we need to know DPI at this point?
+                // Should this function be moved closer to the drawing code?
+                val eCorner = bounds.position.vector2
+                val eDims = bounds.dimensions.vector2
+                val (xAlign, yAlign, meetOrSlice) = preserveAspectRatio
+
+                var scale = eDims / vbDims
+
+                if (xAlign != Align.NONE && yAlign != Align.NONE) {
+                    scale = if (meetOrSlice == MeetOrSlice.MEET) {
+                        Vector2(min(scale.x, scale.y))
+                    } else {
+                        Vector2(max(scale.x, scale.y))
+                    }
+                }
+
+                var translate = eCorner - (vbCorner * scale)
+
+                translate = when (xAlign) {
+                    Align.MID -> translate.copy(x = translate.x + (eDims.x - vbDims.x * scale.x) / 2)
+                    Align.MAX -> translate.copy(x = translate.x + (eDims.x - vbDims.x * scale.x))
+                    else -> translate
+                }
+
+                translate = when (yAlign) {
+                    Align.MID -> translate.copy(y = translate.y + (eDims.y - vbDims.y * scale.y) / 2)
+                    Align.MAX -> translate.copy(y = translate.y + (eDims.y - vbDims.y * scale.y))
+                    else -> translate
+                }
+
+                buildTransform {
+                    translate(translate)
+                    scale(scale.x, scale.y, 1.0)
+                }
+            }
+            viewBox == Rectangle.EMPTY -> {
+                // TODO! Questionable return lmao
+                // The intent is to not display the element
+                Matrix44.ZERO
+            }
+            else -> {
+                Matrix44.IDENTITY
+            }
+        }
+    }
 }
 
 /**

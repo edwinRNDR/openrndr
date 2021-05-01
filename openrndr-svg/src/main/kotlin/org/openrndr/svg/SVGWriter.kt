@@ -57,7 +57,7 @@ fun writeSVG(composition: Composition,
             "height" to height.toInt())
             .map { """${it.key}="${it.value}px"""" }.joinToString(" ")
 
-    sb.append("<svg version=\"1.2\" baseProfile=\"tiny\" id=\"$topLevelId\" $namespaces ${composition.dimensions}>")
+    sb.append("<svg version=\"1.2\" baseProfile=\"tiny\" id=\"$topLevelId\" $namespaces ${composition.bounds}>")
 
     var textPathID = 0
     process(composition.root) { stage ->

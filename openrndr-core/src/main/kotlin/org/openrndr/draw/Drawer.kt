@@ -1051,11 +1051,10 @@ class Drawer(val driver: Driver) {
         fill = ColorRGBa.BLACK
         stroke = null
 
-
         fun node(compositionNode: CompositionNode) {
             pushModel()
             pushStyle()
-            model *= compositionNode.effectiveTransform
+            model *= compositionNode.effectiveTransform * composition.calculateViewportTransform()
 
             when (val s = compositionNode.shadeStyle) {
                 is CShadeStyle -> {

@@ -2,10 +2,7 @@ package org.openrndr.svg
 
 import org.jsoup.nodes.*
 import org.openrndr.math.*
-import org.openrndr.math.min
-import org.openrndr.math.transforms.*
 import org.openrndr.shape.*
-import kotlin.math.*
 
 internal sealed class SVGElement(element: Element?) {
     var tag: String = element?.tagName() ?: ""
@@ -24,7 +21,10 @@ internal sealed class SVGElement(element: Element?) {
     var fillOpacity: CompositionFillOpacity = InheritFillOpacity
     var opacity: CompositionOpacity = InheritOpacity
 
-    private val delimiter = "\\d*".toRegex()
+    private companion object {
+        private val delimiter = "\\d*".toRegex()
+    }
+
     val classList: List<String> = if (className.isBlank()) {
         emptyList()
     } else {
@@ -60,69 +60,11 @@ internal sealed class SVGElement(element: Element?) {
 }
 
 /** <svg> element */
-internal class SVGSVGElement(element: Element): SVGGroup(element), SVGFitToViewBox, SVGDimensions {
-    override var viewBox: Rectangle? = SVGParse.viewBox(this.element)
-    override var preserveAspectRatio: Alignment = SVGParse.preserveAspectRatio(this.element)
+internal class SVGSVGElement(element: Element): SVGGroup(element), SVGDimensions {
+    var viewBox: Rectangle? = SVGParse.viewBox(this.element)
+    var preserveAspectRatio: Alignment = SVGParse.preserveAspectRatio(this.element)
 
     override var bounds = SVGParse.bounds(this.element)
-    /** Represents the scale and translate applied to the viewport */
-    override var currentTransform = calculateViewportTransform()
-
-    /**
-     * Calculates effective viewport transformation using [viewBox] and [preserveAspectRatio].
-     * As per [the SVG 2.0 spec](https://svgwg.org/svg2-draft/single-page.html#coords-ComputingAViewportsTransform)
-     */
-    fun calculateViewportTransform(): Matrix44 {
-        return when {
-            viewBox != null -> {
-                // TODO! Someone tell me how to shorten this
-                val vbCorner = viewBox!!.corner
-                val vbDims = viewBox!!.dimensions
-                // TODO! Do we need to know DPI at this point?
-                // Should this function be in Composition.kt instead?
-                val eCorner = bounds.position.vector2
-                val eDims = bounds.dimensions.vector2
-                val (xAlign, yAlign, meetOrSlice) = preserveAspectRatio
-
-                var scale = eDims / vbDims
-
-                if (xAlign != Align.NONE && yAlign != Align.NONE) {
-                    scale = if (meetOrSlice == MeetOrSlice.MEET) {
-                        Vector2(min(scale.x, scale.y))
-                    } else {
-                        Vector2(max(scale.x, scale.y))
-                    }
-                }
-
-                var translate = eCorner - (vbCorner * scale)
-
-                translate = when (xAlign) {
-                    Align.MID -> translate.copy(x = translate.x + (eDims.x - vbDims.x * scale.x) / 2)
-                    Align.MAX -> translate.copy(x = translate.x + (eDims.x - vbDims.x * scale.x))
-                    else -> translate
-                }
-
-                translate = when (yAlign) {
-                    Align.MID -> translate.copy(y = translate.y + (eDims.y - vbDims.y * scale.y) / 2)
-                    Align.MAX -> translate.copy(y = translate.y + (eDims.y - vbDims.y * scale.y))
-                    else -> translate
-                }
-
-                buildTransform {
-                    translate(translate)
-                    scale(scale.x, scale.y, 1.0)
-                }
-            }
-            viewBox == Rectangle.EMPTY -> {
-                // TODO! Questionable return lmao
-                // The intent is to not display the element
-                Matrix44.ZERO
-            }
-            else -> {
-                Matrix44.IDENTITY
-            }
-        }
-    }
 }
 
 /** <g> element but practically works with everything that has child elements */
@@ -175,7 +117,9 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
             val cs = compoundIndices[index]
             val ce = if (index + 1 < compoundIndices.size) (compoundIndices[index + 1]) else commands.size
 
-            // TODO: We shouldn't be making new SVGPaths without Elements to provide
+            // TODO: We shouldn't be making new SVGPaths without Elements to provide.
+            // This should be unnecessary if SVG shapes map to openrender shapes directly,
+            // instead of converting everything to paths
             val path = SVGPath()
             path.commands.addAll(commands.subList(cs, ce))
 
