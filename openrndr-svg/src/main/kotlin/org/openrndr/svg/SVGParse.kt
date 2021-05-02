@@ -10,26 +10,34 @@ import kotlin.math.*
 
 internal object SVGParse {
 
-    // Matches a single numeric value
+    // Matches a single integer value
     private val numRegex = Regex("[+-]?\\d+")
 
-    // Comma and whitespace separatorm, used in combination with
-    // another pattern as just it's a positive lookahead
-    // and you generally don't actually want to match whitespace
-    private val cRegex = Regex("(?=\\s*,?\\s*)")
+    // Positive rational value
+    private val ratNumRegex = Regex("\\+?(?>\\d+\\.?\\d*|\\.\\d+)")
+
+    // Comma and whitespace separator
+    private val cR = Regex("(?:\\s*,?\\s*)")
 
     // Strict separator regex, allows only whitespace or beginning/ending of string
-    private val sRegex = Regex("(?:\\s|\\A|\\Z)+")
+    private val sR = Regex("(?:\\s|\\A|\\Z)+")
 
     // Captures a length value and its unit type if present
     private val lenRegex = Regex("(?<value>$numRegex)(?<type>in|pc|pt|px|cm|mm|q|em|ex|ch|%)?")
-    private val numListRegex = Regex("$numRegex$cRegex")
+    private val numListRegex = Regex("$numRegex$cR")
 
     private val alignRegex = Regex("(?<align>[xy](?:Min|Mid|Max)[XY](?:Min|Mid|Max))*")
     private val meetRegex = Regex("(?<meet>meet|slice)*")
 
     // Captures alignment value and/or the meet value
-    private val aspectRatioRegex = Regex("$sRegex$alignRegex$sRegex$meetRegex$sRegex")
+    private val aspectRatioRegex = Regex("$sR$alignRegex$sR$meetRegex$sR")
+
+    // Matches rgb(255, 255, 255)
+    private val rgb8BitRegex = Regex("($ratNumRegex)$cR($ratNumRegex)$cR($ratNumRegex)")
+    // Matches rgb(100%, 100%, 100%)
+    private val rgbPercentageRegex = Regex("($ratNumRegex)%$cR($ratNumRegex)%$cR($ratNumRegex)%")
+
+    private val rgbRegex = Regex("${sR}rgb\\(\\s*(?>$rgb8BitRegex\\s*|\\s*$rgbPercentageRegex)\\s*\\)$sR")
 
     fun viewBox(element: Element): Rectangle? {
         val viewBoxValue = element.attr(Attr.VIEW_BOX)
@@ -363,7 +371,7 @@ internal object SVGParse {
             scolor == "fuchsia" -> ColorRGBa.fromHex(0xff00ff)
             scolor == "purple" -> ColorRGBa.fromHex(0x800080)
             scolor == "orange" -> ColorRGBa.fromHex(0xffa500)
-            else -> error("could not parse color: $scolor")
+            else -> null
         }
     }
 
@@ -386,14 +394,10 @@ internal object SVGParse {
     /**
      * Parses rgb functional notation as described in CSS2 spec
      */
-    fun rgbFunction(rgbValue: String): ColorRGBa {
-        // Matches either rgb(0, 0, 0) or rgb(0%, 0%, 0%) and captures the component values (without '%').
-        // Shorten it if you dare (probably not possible unless you can discard all whitespace easily).
-        val rgbRegex =
-            "rgb\\(\\s*(?>(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)|\\s*(\\d+)%\\s*,\\s*(\\d+)%\\s*,\\s*(\\d+)%)\\s*\\)".toRegex()
+    fun rgbFunction(rgbValue: String): ColorRGBa? {
 
         val result =
-            rgbRegex.matchEntire(rgbValue) ?: error("The provided rgb functional notation '$rgbValue' is invalid.")
+            rgbRegex.matchEntire(rgbValue) ?: return null
 
         // The first three capture groups contain values if the match was without percentages
         // Otherwise the values are in capture groups #4 to #6.
