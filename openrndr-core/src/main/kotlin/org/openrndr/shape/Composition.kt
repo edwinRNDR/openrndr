@@ -268,11 +268,22 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
      */
     fun flatten(): ShapeNode {
         return ShapeNode(shape.transform(transform(this))).also {
+            it.id = id
+            it.parent = parent
+            it.visible = visible
+            it.transform = Matrix44.IDENTITY
             it.fill = Color(effectiveFill)
             it.stroke = Color(effectiveStroke)
             it.strokeWeight = StrokeWeight(effectiveStrokeWeight ?: 0.0)
-            it.transform = Matrix44.IDENTITY
-            it.id = id
+            // TODO! Use effective values?
+            it.lineCap = lineCap
+            it.lineJoin = lineJoin
+            it.miterlimit = miterlimit
+            it.strokeOpacity = strokeOpacity
+            it.fillOpacity = fillOpacity
+            it.opacity = opacity
+            it.shadeStyle = shadeStyle
+            it.attributes = attributes
         }
     }
 
@@ -280,11 +291,19 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
         return ShapeNode(shape).also {
             it.id = id
             it.parent = parent
+            it.visible = visible
             it.transform = transform
             it.fill = fill
             it.stroke = stroke
             it.strokeWeight = strokeWeight
-            it.shape = shape
+            it.lineCap = lineCap
+            it.lineJoin = lineJoin
+            it.miterlimit = miterlimit
+            it.strokeOpacity = strokeOpacity
+            it.fillOpacity = fillOpacity
+            it.opacity = opacity
+            it.shadeStyle = shadeStyle
+            it.attributes = attributes
         }
     }
 
@@ -324,14 +343,24 @@ open class GroupNode(open val children: MutableList<CompositionNode> = mutableLi
             return children.map { it.bounds }.bounds
         }
 
-    // TODO! This is lacking in property cloning
+    // TODO! Should this use a data class instead?
     fun copy(id: String? = this.id, parent: CompositionNode? = null, transform: Matrix44 = this.transform, fill: CompositionColor = this.fill, stroke: CompositionColor = this.stroke, children: MutableList<CompositionNode> = this.children): GroupNode {
         return GroupNode(children).also {
             it.id = id
             it.parent = parent
+            it.visible = visible
             it.transform = transform
             it.fill = fill
             it.stroke = stroke
+            it.strokeWeight = strokeWeight
+            it.lineCap = lineCap
+            it.lineJoin = lineJoin
+            it.miterlimit = miterlimit
+            it.strokeOpacity = strokeOpacity
+            it.fillOpacity = fillOpacity
+            it.opacity = opacity
+            it.shadeStyle = shadeStyle
+            it.attributes = attributes
         }
     }
 
@@ -416,7 +445,7 @@ class Composition(val root: CompositionNode, var bounds: CompositionDimensions =
      * Calculates effective viewport transformation using [viewBox] and [preserveAspectRatio].
      * As per [the SVG 2.0 spec](https://svgwg.org/svg2-draft/single-page.html#coords-ComputingAViewportsTransform)
      */
-    fun calculateViewportTransform(): Matrix44 {
+    internal fun calculateViewportTransform(): Matrix44 {
         return when {
             viewBox != null -> {
                 // TODO! Someone tell me how to shorten this

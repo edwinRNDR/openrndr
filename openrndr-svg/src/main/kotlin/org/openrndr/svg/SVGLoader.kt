@@ -1,16 +1,14 @@
 package org.openrndr.svg
 
-import org.jsoup.Jsoup
-import org.jsoup.nodes.*
-import org.jsoup.parser.Parser
-import org.openrndr.color.ColorRGBa
+import mu.*
+import org.jsoup.*
+import org.jsoup.parser.*
 import org.openrndr.math.*
-import org.openrndr.math.transforms.*
 import org.openrndr.shape.*
-import java.io.File
-import java.net.MalformedURLException
-import java.net.URL
-import java.util.regex.Pattern
+import java.io.*
+import java.net.*
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Load a [Composition] from a filename, url or svg string
@@ -112,15 +110,19 @@ internal class SVGLoader {
         val unsupportedVersions = setOf("1.0", "1.1")
 
         if (version in unsupportedVersions) {
-            println("SVG version \"$version\" is not supported!")
+            logger.warn {
+                "SVG version \"$version\" is not supported!"
+            }
         }
 
         // Deprecated in SVG 2.0
         val baseProfile = root.attr(Attr.BASE_PROFILE)
-        val unsupportProfiles = setOf("full", "basic")
+        val unsupportedProfiles = setOf("full", "basic")
 
-        if (baseProfile in unsupportProfiles) {
-            println("SVG baseProfile \"$baseProfile\" is not supported!")
+        if (baseProfile in unsupportedProfiles) {
+            logger.warn {
+                "SVG baseProfile \"$baseProfile\" is not supported!"
+            }
         }
 
         val rootGroup = SVGSVGElement(root)

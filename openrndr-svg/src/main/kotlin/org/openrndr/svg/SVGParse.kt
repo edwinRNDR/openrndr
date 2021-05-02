@@ -245,8 +245,8 @@ internal object SVGParse {
         val ym = dy + height / 2
 
         return listOf(
-            Command("M", dy, ym),
-            Command("C", dy, ym - oy, xm - ox, dy, xm, dy),
+            Command("M", dx, ym),
+            Command("C", dx, ym - oy, xm - ox, dy, xm, dy),
             Command("C", xm + ox, dy, xe, ym - oy, xe, ym),
             Command("C", xe, ym + oy, xm + ox, ye, xm, ye),
             Command("C", xm - ox, ye, dx, ym + oy, dx, ym),
