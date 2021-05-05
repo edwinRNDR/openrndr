@@ -1,8 +1,12 @@
 package org.openrndr.svg
 
+import mu.*
 import org.jsoup.nodes.*
 import org.openrndr.math.*
 import org.openrndr.shape.*
+import kotlin.math.*
+
+private val logger = KotlinLogging.logger {}
 
 internal sealed class SVGElement(element: Element?) {
     var tag: String = element?.tagName() ?: ""
@@ -63,14 +67,15 @@ internal sealed class SVGElement(element: Element?) {
 }
 
 /** <svg> element */
-internal class SVGSVGElement(element: Element): SVGGroup(element) {
+internal class SVGSVGElement(element: Element) : SVGGroup(element) {
     var viewBox: Rectangle? = SVGParse.viewBox(this.element)
     var preserveAspectRatio: Alignment = SVGParse.preserveAspectRatio(this.element)
     var bounds = SVGParse.bounds(this.element)
 }
 
 /** <g> element but practically works with everything that has child elements */
-internal open class SVGGroup(val element: Element, val elements: MutableList<SVGElement> = mutableListOf()) : SVGElement(element) {
+internal open class SVGGroup(val element: Element, val elements: MutableList<SVGElement> = mutableListOf()) :
+    SVGElement(element) {
 
     init {
         this.element.attributes().forEach {
@@ -102,6 +107,23 @@ internal open class SVGGroup(val element: Element, val elements: MutableList<SVG
     }
 }
 
+internal class Command(val op: String, vararg val operands: Double) {
+    fun asVectorList(): List<Vector2>? {
+        return if (operands.size % 2 == 0) {
+            operands.asList().chunked(2) { Vector2(it[0], it[1]) }
+        } else {
+            null
+        }
+    }
+}
+
+// For evaluating elliptical arc arguments according to the SVG spec
+internal fun Double.toBoolean(): Boolean? = when (this) {
+    0.0 -> false
+    1.0 -> true
+    else -> null
+}
+
 internal class SVGPath(val element: Element? = null) : SVGElement(element) {
     val commands = mutableListOf<Command>()
 
@@ -120,8 +142,6 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
             val ce = if (index + 1 < compoundIndices.size) (compoundIndices[index + 1]) else commands.size
 
             // TODO: We shouldn't be making new SVGPaths without Elements to provide.
-            // This should be unnecessary if SVG shapes map to openrender shapes directly,
-            // instead of converting everything to paths
             val path = SVGPath()
             path.commands.addAll(commands.subList(cs, ce))
 
@@ -131,163 +151,242 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
     }
 
     fun shape(): Shape {
-        var cursor = Vector2(0.0, 0.0)
-        var anchor = cursor.copy()
-        var relativeControl = Vector2(0.0, 0.0)
+        var cursor = Vector2.ZERO
+        var anchor = Vector2.ZERO
+        // Still problematic
+        var prevCubicCtrlPoint: Vector2? = null
+        var prevQuadCtrlPoint: Vector2? = null
 
         val contours = compounds().map { compound ->
             val segments = mutableListOf<Segment>()
             var closed = false
+            // If an argument is invalid, an error is logged,
+            // further interpreting is stopped and contour is returned as-is.
             compound.commands.forEach { command ->
+
+                if (command.op !in listOf("z", "Z") && command.operands.isEmpty()) {
+                    logger.error("Invalid amount of arguments provided for: ${command.op}")
+                    return@forEach
+                }
+
+                val points = command.asVectorList()
+
+                if (points == null && command.op.toLowerCase() !in listOf("a", "h", "v")) {
+                    logger.error("Invalid amount of arguments provided for: ${command.op}")
+                    return@forEach
+                }
+
                 when (command.op) {
-                    "a", "A" -> {
-                        command.operands.let {
-                            val rx = it[0]
-                            val ry = it[1]
-                            val xAxisRot = it[2]
-                            val largeArcFlag = it[3].toBoolean()
-                            val sweepFlag = it[4].toBoolean()
+                    "A", "a" -> {
+                        // If size == step, only the last window can be partial
+                        // Special case as it also has boolean values
+                        val contours = command.operands.toList().windowed(7, 7, true).map m@{
+                            if (it.size != 7) {
+                                logger.error("Invalid amount of arguments provided for: ${command.op}")
+                                return@forEach
+                            } else {
+                                val rx = it[0].absoluteValue
+                                val ry = it[1].absoluteValue
+                                val xAxisRot = it[2]
+                                val largeArcFlag = it[3].toBoolean()
+                                val sweepFlag = it[4].toBoolean()
 
-                            var end = Vector2(it[5], it[6])
+                                if (largeArcFlag == null || sweepFlag == null || rx == 0.0 || ry == 0.0) {
+                                    logger.error("Invalid values provided for: ${command.op}")
+                                    return@forEach
+                                }
 
-                            if (command.op == "a") end += cursor
+                                val end = Vector2(it[5], it[6]).let { v ->
+                                    if (command.op == "a") {
+                                        v + cursor
+                                    } else {
+                                        v
+                                    }
+                                }
 
-                            val c = contour {
-                                moveTo(cursor)
-                                arcTo(rx, ry, xAxisRot, largeArcFlag, sweepFlag, end)
-                            }.segments
-
-                            segments += c
-                            cursor = end
+                                contour {
+                                    moveTo(cursor)
+                                    arcTo(rx, ry, xAxisRot, largeArcFlag, sweepFlag, end)
+                                    cursor = end
+                                }
+                            }
                         }
+
+                        // I don't know why we can't just have segments from the above map,
+                        // but this is the only way this works.
+                        segments += contours.flatMap { it.segments}
                     }
                     "M" -> {
-                        cursor = command.vector(0, 1)
+                        cursor = points!!.firstOrNull() ?: return@forEach
                         anchor = cursor
 
-                        val allPoints = command.vectors()
-
-                        for (i in 1 until allPoints.size) {
-                            val point = allPoints[i]
-                            segments += Segment(cursor, point)
-                            cursor = point
+                        // Following points are implicit lineto arguments
+                        segments += points.drop(1).map {
+                            Segment(cursor, it).apply {
+                                cursor = it
+                            }
                         }
                     }
                     "m" -> {
-                        val allPoints = command.vectors()
-                        cursor += command.vector(0, 1)
+                        cursor += points!!.firstOrNull() ?: return@forEach
                         anchor = cursor
 
-                        for (i in 1 until allPoints.size) {
-                            val point = allPoints[i]
-                            segments += Segment(cursor, cursor + point)
-                            cursor += point
+                        // Following points are implicit lineto arguments
+                        segments += points.drop(1).map {
+                            Segment(cursor, cursor + it).apply {
+                                cursor += it
+                            }
                         }
                     }
                     "L" -> {
-                        val allPoints = command.vectors()
-
-                        for (point in allPoints) {
-                            segments += Segment(cursor, point)
-                            cursor = point
+                        segments += points!!.map {
+                            Segment(cursor, it).apply {
+                                cursor = it
+                            }
                         }
                     }
                     "l" -> {
-                        val allPoints = command.vectors()
-
-                        for (point in allPoints) {
-                            val target = cursor + point
-                            segments += Segment(cursor, target)
-                            cursor = target
-                        }
-                    }
-                    "h" -> {
-                        for (operand in command.operands) {
-                            val startCursor = cursor
-                            val target = startCursor + Vector2(operand, 0.0)
-                            segments += Segment(cursor, target)
-                            cursor = target
+                        segments += points!!.map {
+                            Segment(cursor, cursor + it).apply {
+                                cursor += it
+                            }
                         }
                     }
                     "H" -> {
-                        for (operand in command.operands) {
-                            val target = Vector2(operand, cursor.y)
-                            segments += Segment(cursor, target)
-                            cursor = target
+                        segments += command.operands.map {
+                            val target = Vector2(it, cursor.y)
+                            Segment(cursor, target).apply {
+                                cursor = target
+                            }
                         }
                     }
-                    "v" -> {
-                        for (operand in command.operands) {
-                            val target = cursor + Vector2(0.0, operand)
-                            segments += Segment(cursor, target)
-                            cursor = target
+                    "h" -> {
+                        segments += command.operands.map {
+                            val target = cursor + Vector2(it, 0.0)
+                            Segment(cursor, target).apply {
+                                cursor = target
+                            }
                         }
                     }
                     "V" -> {
-                        for (operand in command.operands) {
-                            val target = Vector2(cursor.x, operand)
-                            segments += Segment(cursor, target)
-                            cursor = target
+                        segments += command.operands.map {
+                            val target = Vector2(cursor.x, it)
+                            Segment(cursor, target).apply {
+                                cursor = target
+                            }
+                        }
+                    }
+                    "v" -> {
+                        segments += command.operands.map {
+                            val target = cursor + Vector2(0.0, it)
+                            Segment(cursor, target).apply {
+                                cursor = target
+                            }
                         }
                     }
                     "C" -> {
-                        val allPoints = command.vectors()
-                        allPoints.windowed(3, 3).forEach { points ->
-                            segments += Segment(cursor, points[0], points[1], points[2])
-                            cursor = points[2]
-                            relativeControl = points[1] - points[2]
+                        segments += points!!.windowed(3, 3, true).map {
+                            if (it.size != 3) {
+                                logger.error("Invalid amount of arguments provided for: ${command.op}")
+                                return@forEach
+                            } else {
+                                val (cp1, cp2, target) = it
+                                Segment(cursor, cp1, cp2, target).also {
+                                    cursor = target
+                                    prevCubicCtrlPoint = cp2
+                                }
+                            }
                         }
                     }
                     "c" -> {
-                        val allPoints = command.vectors()
-                        allPoints.windowed(3, 3).forEach { points ->
-                            segments += Segment(cursor, cursor + points[0], cursor + points[1], cursor.plus(points[2]))
-                            relativeControl = (cursor + points[1]) - (cursor + points[2])
-                            cursor += points[2]
+                        segments += points!!.windowed(3, 3, true).map {
+                            if (it.size != 3) {
+                                logger.error("Invalid amount of arguments provided for: ${command.op}")
+                                return@forEach
+                            } else {
+                                val (cp1, cp2, target) = it.map { v -> cursor + v }
+                                Segment(cursor, cp1, cp2, target).apply {
+                                    cursor = target
+                                    prevCubicCtrlPoint = cp2
+                                }
+                            }
                         }
                     }
-                    "Q" -> {
-                        val allPoints = command.vectors()
-                        if ((allPoints.size) % 2 != 0) {
-                            error("invalid number of operands for Q-op (operands=${allPoints.size})")
-                        }
-                        for (c in 0 until allPoints.size / 2) {
-                            val points = allPoints.subList(c * 2, c * 2 + 2)
-                            segments += Segment(cursor, points[0], points[1])
-                            cursor = points[1]
-                            relativeControl = points[0] - points[1]
-                        }
-                    }
-                    "q" -> {
-                        val allPoints = command.vectors()
-                        if ((allPoints.size) % 2 != 0) {
-                            error("invalid number of operands for q-op (operands=${allPoints.size})")
-                        }
-                        for (c in 0 until allPoints.size / 2) {
-                            val points = allPoints.subList(c * 2, c * 2 + 2)
-                            val target = cursor + points[1]
-                            segments += Segment(cursor, cursor + points[0], target)
-                            relativeControl = (cursor + points[0]) - (cursor + points[1])
-                            cursor = target
+                    "S" -> {
+                        segments += points!!.windowed(2, 2, true).map {
+                            if (it.size != 2) {
+                                logger.error("Invalid amount of arguments provided for: ${command.op}")
+                                return@forEach
+                            } else {
+                                val cp1 = 2.0 * cursor - (prevCubicCtrlPoint ?: cursor)
+                                val (cp2, target) = it
+                                Segment(cursor, cp1, cp2, target).also {
+                                    cursor = target
+                                    prevCubicCtrlPoint = cp2
+                                }
+                            }
                         }
                     }
                     "s" -> {
-                        val reflected = relativeControl * -1.0
-                        val cp0 = cursor + reflected
-                        val cp1 = cursor + command.vector(0, 1)
-                        val target = cursor + command.vector(2, 3)
-                        segments += Segment(cursor, cp0, cp1, target)
-                        cursor = target
-                        relativeControl = cp1 - target
+                        segments += points!!.windowed(2, 2, true).map {
+                            if (it.size != 2) {
+                                logger.error("Invalid amount of arguments provided for: ${command.op}")
+                                return@forEach
+                            } else {
+                                val cp1 = 2.0 * cursor - (prevCubicCtrlPoint ?: cursor)
+                                val (cp2, target) = it.map { v -> cursor + v }
+                                Segment(cursor, cp1, cp2, target).also {
+                                    cursor = target
+                                    prevCubicCtrlPoint = cp2
+                                }
+                            }
+                        }
                     }
-                    "S" -> {
-                        val reflected = relativeControl * -1.0
-                        val cp0 = cursor + reflected
-                        val cp1 = command.vector(0, 1)
-                        val target = command.vector(2, 3)
-                        segments += Segment(cursor, cp0, cp1, target)
-                        cursor = target
-                        relativeControl = cp1 - target
+                    "Q" -> {
+                        segments += points!!.windowed(2, 2, true).map {
+                            if (it.size != 2) {
+                                logger.error("Invalid amount of arguments provided for: ${command.op}")
+                                return@forEach
+                            } else {
+                                val (cp, target) = it
+                                Segment(cursor, cp, target).also {
+                                    cursor = target
+                                    prevQuadCtrlPoint = cp
+                                }
+                            }
+                        }
+                    }
+                    "q" -> {
+                        segments += points!!.windowed(2, 2, true).map {
+                            if (it.size != 2) {
+                                logger.error("Invalid amount of arguments provided for: ${command.op}")
+                                return@forEach
+                            } else {
+                                val (cp, target) = it.map { v -> cursor + v }
+                                Segment(cursor, cp, target).also {
+                                    cursor = target
+                                    prevQuadCtrlPoint = cp
+                                }
+                            }
+                        }
+                    }
+                    "T" -> {
+                        points!!.forEach {
+                            val cp = 2.0 * cursor - (prevQuadCtrlPoint ?: cursor)
+                            Segment(cursor, cp, it).also { _ ->
+                                cursor = it
+                                prevQuadCtrlPoint = cp
+                            }
+                        }
+                    }
+                    "t" -> {
+                        points!!.forEach {
+                            val cp = 2.0 * cursor - (prevQuadCtrlPoint ?: cursor)
+                            Segment(cursor, cp, cursor + it).also { _ ->
+                                cursor = it
+                                prevQuadCtrlPoint = cp
+                            }
+                        }
                     }
                     "Z", "z" -> {
                         if ((cursor - anchor).length >= 0.001) {
@@ -296,7 +395,11 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
                         closed = true
                     }
                     else -> {
-                        error("unsupported path operand: ${command.op}")
+                        // The spec declares we should still attempt to render
+                        // the path up until the erroneous command as to visually
+                        // signal the user where the error occurred.
+                        logger.error("Invalid path operator: ${command.op}")
+                        return@forEach
                     }
                 }
             }

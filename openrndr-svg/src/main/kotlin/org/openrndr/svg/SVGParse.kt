@@ -311,29 +311,22 @@ internal object SVGParse {
     fun path(element: Element): List<Command> {
         val pathValue = element.attr(Attr.D)
 
-        val rawCommands = pathValue.split("(?=[MmZzLlHhVvCcSsQqTtAa])".toRegex()).dropLastWhile { it.isEmpty() }
-        val numbers = Pattern.compile("[-+]?[0-9]*[.]?[0-9]+(?:[eE][-+]?[0-9]+)?")
-        val arcOpReg = Pattern.compile("[aA]")
+        if (pathValue.trim() == "none") {
+            return emptyList()
+        }
 
+        val rawCommands = pathValue.split("(?=[MmZzLlHhVvCcSsQqTtAa])".toRegex()).map { it.trim() }
+        val numbers = Pattern.compile("[-+]?[0-9]*[.]?[0-9]+(?:[eE][-+]?[0-9]+)?")
         val commands = mutableListOf<Command>()
 
         for (rawCommand in rawCommands) {
             if (rawCommand.isNotEmpty()) {
-                // Special case for arcTo command where the "numbers" RegExp breaks
-                if (arcOpReg.matcher(rawCommand[0].toString()).find()) {
-                    arcCommand(rawCommand.substring(1)).forEach {
-                        val operands = it.map { operand -> operand.toDouble() }
-
-                        commands += Command(rawCommand[0].toString(), *(operands.toDoubleArray()))
-                    }
-                } else {
-                    val numberMatcher = numbers.matcher(rawCommand)
-                    val operands = mutableListOf<Double>()
-                    while (numberMatcher.find()) {
-                        operands.add(numberMatcher.group().toDouble())
-                    }
-                    commands += Command(rawCommand[0].toString(), *(operands.toDoubleArray()))
+                val numberMatcher = numbers.matcher(rawCommand)
+                val operands = mutableListOf<Double>()
+                while (numberMatcher.find()) {
+                    operands.add(numberMatcher.group().toDouble())
                 }
+                commands += Command(rawCommand[0].toString(), *(operands.toDoubleArray()))
             }
         }
 
@@ -420,46 +413,4 @@ internal object SVGParse {
         hexValue.asSequence()
             .map { "$it$it" }
             .reduce { accumulatedHex, component -> accumulatedHex + component }
-
-    fun arcCommand(p: String): List<List<String>> {
-        val sepReg = Pattern.compile(",|\\s")
-        val boolReg = Pattern.compile("[01]")
-
-        var cursor = 0
-        var group = ""
-        val groups = mutableListOf<String>()
-        val commands = mutableListOf<List<String>>()
-
-        while (cursor <= p.lastIndex) {
-            val token = p[cursor].toString()
-
-            if (sepReg.matcher(token).find()) {
-                if (group.isNotEmpty()) {
-                    groups.add(group)
-                }
-
-                group = ""
-            } else {
-                group += token
-
-                if ((boolReg.matcher(token).find() && (groups.size in 3..5)) || cursor == p.lastIndex) {
-                    if (group.isNotEmpty()) {
-                        groups.add(group)
-                    }
-
-                    group = ""
-                }
-            }
-
-            if (groups.size == 7) {
-                commands.add(groups.toList())
-                groups.clear()
-                group = ""
-            }
-
-            cursor++
-        }
-
-        return commands
-    }
 }

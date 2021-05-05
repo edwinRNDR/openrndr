@@ -3,7 +3,6 @@ package org.openrndr.svg
 import mu.*
 import org.jsoup.*
 import org.jsoup.parser.*
-import org.openrndr.math.*
 import org.openrndr.shape.*
 import java.io.*
 import java.net.*
@@ -44,19 +43,7 @@ fun parseSVG(svgString: String): Composition {
     return document.composition()
 }
 
-internal class Command(val op: String, vararg val operands: Double) {
-    fun vector(i0: Int, i1: Int): Vector2 {
-        val x = if (i0 == -1) 0.0 else operands[i0]
-        val y = if (i1 == -1) 0.0 else operands[i1]
-        return Vector2(x, y)
-    }
-
-    fun vectors(): List<Vector2> = (0 until operands.size / 2).map { Vector2(operands[it * 2], operands[it * 2 + 1]) }
-}
-
 // internal class SVGImage(val url: String, val x: Double?, val y: Double?, val width: Double?, val height: Double?) : SVGElement()
-
-internal fun Double.toBoolean() = this.toInt() == 1
 
 internal class SVGDocument(private val root: SVGElement, val namespaces: Map<String, String>) {
     fun composition(): Composition = Composition(

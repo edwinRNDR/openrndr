@@ -98,7 +98,6 @@ internal object Prop {
     const val FONT_VARIANT = "font-variant"
     const val FONT_WEIGHT = "font-weight"
     const val OPACITY = "opacity"
-    const val SHAPE_RENDERING = "shape-rendering"
     const val STOP_COLOR = "stop-color"
     const val STOP_OPACITY = "stop-opacity"
     const val STROKE = "stroke"
@@ -129,7 +128,6 @@ internal object Prop {
         FONT_VARIANT,
         FONT_WEIGHT,
         OPACITY,
-        SHAPE_RENDERING,
         STOP_COLOR,
         STOP_OPACITY,
         STROKE,
