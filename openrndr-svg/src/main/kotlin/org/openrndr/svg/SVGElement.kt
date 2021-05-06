@@ -13,8 +13,6 @@ internal sealed class SVGElement(element: Element?) {
     var id: String = element?.id() ?: ""
     val className: String = element?.className() ?: ""
 
-    var visible = true
-
     var transform: Matrix44 = Matrix44.IDENTITY
 
     var fill: CompositionColor = InheritColor
@@ -171,6 +169,7 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
 
                 val points = command.asVectorList()
 
+                // TODO: Rethink this check
                 if (points == null && command.op.toLowerCase() !in listOf("a", "h", "v")) {
                     logger.error("Invalid amount of arguments provided for: ${command.op}")
                     return@forEach
@@ -185,8 +184,8 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
                                 logger.error("Invalid amount of arguments provided for: ${command.op}")
                                 return@forEach
                             } else {
-                                val rx = it[0].absoluteValue
-                                val ry = it[1].absoluteValue
+                                val rx = it[0]
+                                val ry = it[1]
                                 val xAxisRot = it[2]
                                 val largeArcFlag = it[3].toBoolean()
                                 val sweepFlag = it[4].toBoolean()

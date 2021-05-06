@@ -22,8 +22,6 @@ sealed class CompositionNode {
 
     var parent: CompositionNode? = null
 
-    var visible: Boolean = true
-
     var transform = Matrix44.IDENTITY
 
     var fill: CompositionColor = InheritColor
@@ -255,11 +253,20 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
      */
     fun conflate(): ShapeNode {
         return ShapeNode(shape).also {
+            it.id = id
+            it.parent = parent
+            it.transform = transform(this)
             it.fill = fill
             it.stroke = stroke
             it.strokeWeight = strokeWeight
-            it.transform = transform(this)
-            it.id = id
+            it.lineCap = lineCap
+            it.lineJoin = lineJoin
+            it.miterlimit = miterlimit
+            it.strokeOpacity = strokeOpacity
+            it.fillOpacity = fillOpacity
+            it.opacity = opacity
+            it.shadeStyle = shadeStyle
+            it.attributes = attributes
         }
     }
 
@@ -270,7 +277,6 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
         return ShapeNode(shape.transform(transform(this))).also {
             it.id = id
             it.parent = parent
-            it.visible = visible
             it.transform = Matrix44.IDENTITY
             it.fill = Color(effectiveFill)
             it.stroke = Color(effectiveStroke)
@@ -291,7 +297,6 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
         return ShapeNode(shape).also {
             it.id = id
             it.parent = parent
-            it.visible = visible
             it.transform = transform
             it.fill = fill
             it.stroke = stroke
@@ -348,7 +353,6 @@ open class GroupNode(open val children: MutableList<CompositionNode> = mutableLi
         return GroupNode(children).also {
             it.id = id
             it.parent = parent
-            it.visible = visible
             it.transform = transform
             it.fill = fill
             it.stroke = stroke
