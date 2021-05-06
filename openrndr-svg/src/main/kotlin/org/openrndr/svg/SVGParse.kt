@@ -351,23 +351,8 @@ internal object SVGParse {
                 ColorRGBa(r / 255.0, g / 255.0, b / 255.0, 1.0)
             }
             scolor.startsWith("rgb(") -> rgbFunction(scolor)
-            scolor == "white" -> ColorRGBa.WHITE
-            scolor == "silver" -> ColorRGBa.fromHex(0xc0c0c0)
-            scolor == "gray" -> ColorRGBa.fromHex(0x808080)
-            scolor == "black" -> ColorRGBa.BLACK
-            scolor == "red" -> ColorRGBa.RED
-            scolor == "maroon" -> ColorRGBa.fromHex(0x800000)
-            scolor == "yellow" -> ColorRGBa.fromHex(0xffff00)
-            scolor == "olive" -> ColorRGBa.fromHex(0x808000)
-            scolor == "lime" -> ColorRGBa.fromHex(0x00ff00)
-            scolor == "green" -> ColorRGBa.fromHex(0x008000)
-            scolor == "aqua" -> ColorRGBa.fromHex(0x00ffff)
-            scolor == "teal" -> ColorRGBa.fromHex(0x008080)
-            scolor == "blue" -> ColorRGBa.fromHex(0x0000ff)
-            scolor == "navy" -> ColorRGBa.fromHex(0x000080)
-            scolor == "fuchsia" -> ColorRGBa.fromHex(0xff00ff)
-            scolor == "purple" -> ColorRGBa.fromHex(0x800080)
-            scolor == "orange" -> ColorRGBa.fromHex(0xffa500)
+            scolor == "transparent" -> ColorRGBa.TRANSPARENT
+            scolor in cssColorNames -> ColorRGBa.fromHex(cssColorNames[scolor]!!)
             else -> null
         }
     }
