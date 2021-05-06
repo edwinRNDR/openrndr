@@ -41,7 +41,6 @@ sealed class CompositionNode {
      */
     var attributes = mutableMapOf<String, String?>()
 
-
     /**
      * a map that stores user data
      */
@@ -156,7 +155,7 @@ sealed class CompositionNode {
             }
         }
 
-    open val effectiveTransform: Matrix44
+    val effectiveTransform: Matrix44
         get() {
             return if (transform === Matrix44.IDENTITY) {
                 parent?.effectiveTransform ?: Matrix44.IDENTITY

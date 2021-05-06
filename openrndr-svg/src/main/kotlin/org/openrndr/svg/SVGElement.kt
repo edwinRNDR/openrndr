@@ -10,7 +10,6 @@ private val logger = KotlinLogging.logger {}
 internal sealed class SVGElement(element: Element?) {
     var tag: String = element?.tagName() ?: ""
     var id: String = element?.id() ?: ""
-    val className: String = element?.className() ?: ""
 
     var transform: Matrix44 = Matrix44.IDENTITY
 
@@ -23,16 +22,6 @@ internal sealed class SVGElement(element: Element?) {
     var strokeOpacity: CompositionStrokeOpacity = InheritStrokeOpacity
     var fillOpacity: CompositionFillOpacity = InheritFillOpacity
     var opacity: CompositionOpacity = InheritOpacity
-
-    private companion object {
-        private val delimiter = "\\d*".toRegex()
-    }
-
-    val classList: List<String> = if (className.isBlank()) {
-        emptyList()
-    } else {
-        className.split(delimiter)
-    }
 
     abstract fun handleAttribute(attribute: Attribute)
 
@@ -48,6 +37,7 @@ internal sealed class SVGElement(element: Element?) {
             Prop.STROKE_WIDTH -> strokeWeight = StrokeWeight(value.toDouble())
             Prop.FILL_OPACITY -> fillOpacity = FillOpacity(value.toDouble())
             Prop.OPACITY -> opacity = Opacity(value.toDouble())
+            else -> logger.error("Unknown property: $key")
         }
     }
 
@@ -70,7 +60,7 @@ internal class SVGSVGElement(element: Element) : SVGGroup(element) {
     var bounds = SVGParse.bounds(this.element)
 }
 
-/** <g> element but practically works with everything that has child elements */
+/** <g> element but practically works with anything that has child elements */
 internal open class SVGGroup(val element: Element, val elements: MutableList<SVGElement> = mutableListOf()) :
     SVGElement(element) {
 
@@ -139,6 +129,7 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
             val ce = if (index + 1 < compoundIndices.size) (compoundIndices[index + 1]) else commands.size
 
             // TODO: We shouldn't be making new SVGPaths without Elements to provide.
+            // Then we could make SVGPath's constructor non-nullable
             val path = SVGPath()
             path.commands.addAll(commands.subList(cs, ce))
 
@@ -158,7 +149,7 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
             val segments = mutableListOf<Segment>()
             var closed = false
             // If an argument is invalid, an error is logged,
-            // further interpreting is stopped and contour is returned as-is.
+            // further interpreting is stopped and compound is returned as-is.
             compound.commands.forEach { command ->
 
                 if (command.op !in listOf("z", "Z") && command.operands.isEmpty()) {
@@ -215,6 +206,7 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
                         segments += contours.flatMap { it.segments}
                     }
                     "M" -> {
+                        // TODO: Log an error when this nulls
                         cursor = points!!.firstOrNull() ?: return@forEach
                         anchor = cursor
 
@@ -226,6 +218,7 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
                         }
                     }
                     "m" -> {
+                        // TODO: Log an error when this nulls
                         cursor += points!!.firstOrNull() ?: return@forEach
                         anchor = cursor
 
