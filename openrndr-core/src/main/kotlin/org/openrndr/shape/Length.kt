@@ -71,7 +71,7 @@ data class Length(val units: Double, val type: UnitType = PX) {
             // Pixels are implied when unit type is not present, so why include them?
             PX -> "$units"
             PERCENT -> "$units%"
-            else -> "$units${type.name.toLowerCase()}"
+            else -> "$units${type.name.lowercase()}"
         }
     }
 }

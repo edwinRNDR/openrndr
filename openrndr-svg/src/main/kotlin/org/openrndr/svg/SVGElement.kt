@@ -4,7 +4,6 @@ import mu.*
 import org.jsoup.nodes.*
 import org.openrndr.math.*
 import org.openrndr.shape.*
-import kotlin.math.*
 
 private val logger = KotlinLogging.logger {}
 
@@ -42,8 +41,8 @@ internal sealed class SVGElement(element: Element?) {
         when (key) {
             Prop.FILL -> fill = Color(SVGParse.color(value))
             Prop.STROKE -> stroke = Color(SVGParse.color(value))
-            Prop.STROKE_LINECAP -> lineCap = LineCap(org.openrndr.draw.LineCap.valueOf(value.toUpperCase()))
-            Prop.STROKE_LINEJOIN -> lineJoin = LineJoin(org.openrndr.draw.LineJoin.valueOf(value.toUpperCase()))
+            Prop.STROKE_LINECAP -> lineCap = LineCap(org.openrndr.draw.LineCap.valueOf(value.uppercase()))
+            Prop.STROKE_LINEJOIN -> lineJoin = LineJoin(org.openrndr.draw.LineJoin.valueOf(value.uppercase()))
             Prop.STROKE_MITERLIMIT -> miterlimit = Miterlimit(value.toDouble())
             Prop.STROKE_OPACITY -> strokeOpacity = StrokeOpacity(value.toDouble())
             Prop.STROKE_WIDTH -> strokeWeight = StrokeWeight(value.toDouble())
@@ -170,7 +169,7 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
                 val points = command.asVectorList()
 
                 // TODO: Rethink this check
-                if (points == null && command.op.toLowerCase() !in listOf("a", "h", "v")) {
+                if (points == null && command.op.lowercase() !in listOf("a", "h", "v")) {
                     logger.error("Invalid amount of arguments provided for: ${command.op}")
                     return@forEach
                 }

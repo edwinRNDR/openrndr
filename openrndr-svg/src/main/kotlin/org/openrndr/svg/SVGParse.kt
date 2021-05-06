@@ -17,6 +17,7 @@ internal object SVGParse {
     private val ratNumRegex = Regex("\\+?(?>\\d+\\.?\\d*|\\.\\d+)")
 
     // Comma and whitespace separator
+    @Suppress("RegExpUnnecessaryNonCapturingGroup")
     private val cR = Regex("(?:\\s*,?\\s*)")
 
     // Strict separator regex, allows only whitespace or beginning/ending of string
@@ -105,7 +106,7 @@ internal object SVGParse {
             lenRegex.matchEntire(str).let {
                 val value = (it?.groups as? MatchNamedGroupCollection)?.get("value")?.value?.toDouble() ?: 0.0
                 val type = Length.UnitType.valueOf(
-                    (it?.groups as? MatchNamedGroupCollection)?.get("type")?.value?.toUpperCase() ?: "PX"
+                    (it?.groups as? MatchNamedGroupCollection)?.get("type")?.value?.uppercase() ?: "PX"
                 )
 
                 Length(value, type)
@@ -115,6 +116,7 @@ internal object SVGParse {
         return CompositionDimensions(x, y, width, height)
     }
 
+    // Syntax should map to https://www.w3.org/TR/css-transforms-1/#svg-syntax
     fun transform(element: Element): Matrix44 {
         var transform = Matrix44.IDENTITY
 
@@ -124,9 +126,11 @@ internal object SVGParse {
             }
         }
 
+        // TOOD: Number regex accepts `-` as a number lol
         val p = Pattern.compile("(matrix|translate|scale|rotate|skewX|skewY)\\([\\d\\.,\\-\\s]+\\)")
         val m = p.matcher(transformValue)
 
+        // TODO: This looks to be making far too many assumptions about the well-formedness of its input
         fun getTransformOperands(token: String): List<Double> {
             val number = Pattern.compile("-?[0-9.eE\\-]+")
             val nm = number.matcher(token)
@@ -374,7 +378,7 @@ internal object SVGParse {
         val matchResult = colorHexRegex.matchEntire(colorHex)
             ?: error("The provided colorHex '$colorHex' is not a valid color hex for the SVG spec")
 
-        val hexValue = matchResult.groups[1]!!.value.toLowerCase()
+        val hexValue = matchResult.groups[1]!!.value.lowercase()
         val normalizedArgb = when (hexValue.length) {
             3 -> expandToTwoDigitsPerComponent("f$hexValue")
             6 -> hexValue
