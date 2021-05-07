@@ -449,50 +449,48 @@ class Composition(val root: CompositionNode, var bounds: CompositionDimensions =
      * As per [the SVG 2.0 spec](https://svgwg.org/svg2-draft/single-page.html#coords-ComputingAViewportsTransform)
      */
     internal fun calculateViewportTransform(): Matrix44 {
-        return when {
-            viewBox != null -> {
-                // TODO! Someone tell me how to shorten this
+        return when (viewBox) {
+            Rectangle.EMPTY, null -> {
+                // The intent is to not display the element
+                Matrix44.ZERO
+            }
+            is Rectangle -> {
                 val vbCorner = viewBox!!.corner
                 val vbDims = viewBox!!.dimensions
-                // TODO! Do we need to know DPI at this point?
-                // Should this function be moved closer to the drawing code?
                 val eCorner = bounds.position.vector2
                 val eDims = bounds.dimensions.vector2
                 val (xAlign, yAlign, meetOrSlice) = preserveAspectRatio
 
-                var scale = eDims / vbDims
-
-                if (xAlign != Align.NONE && yAlign != Align.NONE) {
-                    scale = if (meetOrSlice == MeetOrSlice.MEET) {
-                        Vector2(min(scale.x, scale.y))
+                val scale = (eDims / vbDims).let {
+                    if (xAlign != Align.NONE && yAlign != Align.NONE) {
+                        if (meetOrSlice == MeetOrSlice.MEET) {
+                            Vector2(min(it.x, it.y))
+                        } else {
+                            Vector2(max(it.x, it.y))
+                        }
                     } else {
-                        Vector2(max(scale.x, scale.y))
+                        it
                     }
                 }
 
-                var translate = eCorner - (vbCorner * scale)
-
-                translate = when (xAlign) {
-                    Align.MID -> translate.copy(x = translate.x + (eDims.x - vbDims.x * scale.x) / 2)
-                    Align.MAX -> translate.copy(x = translate.x + (eDims.x - vbDims.x * scale.x))
-                    else -> translate
-                }
-
-                translate = when (yAlign) {
-                    Align.MID -> translate.copy(y = translate.y + (eDims.y - vbDims.y * scale.y) / 2)
-                    Align.MAX -> translate.copy(y = translate.y + (eDims.y - vbDims.y * scale.y))
-                    else -> translate
+                val translate = (eCorner - (vbCorner * scale)).let {
+                    val dx = when (xAlign) {
+                        Align.MAX -> eDims.x - vbDims.x * scale.x
+                        Align.MID -> (eDims.x - vbDims.x * scale.x) / 2
+                        else -> 0.0
+                    }
+                    val dy = when (yAlign) {
+                        Align.MAX -> eDims.y - vbDims.y * scale.y
+                        Align.MID -> (eDims.y - vbDims.y * scale.y) / 2
+                        else -> 0.0
+                    }
+                    it + Vector2(dx, dy)
                 }
 
                 buildTransform {
                     translate(translate)
                     scale(scale.x, scale.y, 1.0)
                 }
-            }
-            viewBox == Rectangle.EMPTY -> {
-                // TODO! Questionable return lmao
-                // The intent is to not display the element
-                Matrix44.ZERO
             }
             else -> {
                 Matrix44.IDENTITY
