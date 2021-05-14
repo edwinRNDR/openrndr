@@ -15,6 +15,9 @@ import org.openrndr.math.transforms.rotateZ
 import org.openrndr.math.transforms.scale
 import org.openrndr.math.transforms.translate
 import org.openrndr.shape.*
+import org.openrndr.shape.Paint
+import org.openrndr.shape.Rectangle
+import org.openrndr.shape.Shape
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
@@ -1061,8 +1064,6 @@ class Drawer(val driver: Driver) {
     fun composition(composition: Composition) {
         pushModel()
         pushStyle()
-        fill = ColorRGBa.BLACK
-        stroke = null
 
         // viewBox transformation
         model *= composition.calculateViewportTransform()
@@ -1070,47 +1071,60 @@ class Drawer(val driver: Driver) {
         fun node(compositionNode: CompositionNode) {
             pushModel()
             pushStyle()
-            model *= compositionNode.effectiveTransform
+            model *= compositionNode.style.transform.value
 
-            @Suppress("NON_EXHAUSTIVE_WHEN_ON_SEALED_CLASS")
-            when (compositionNode.shadeStyle) {
-                is CShadeStyle -> {
-                    shadeStyle.let {
-                        compositionNode.shadeStyle
-                    }
-                }
-            }
+            shadeStyle = (compositionNode.style.shadeStyle as Shade.Value).shadeStyle
 
             when (compositionNode) {
                 is ShapeNode -> {
-                    compositionNode.fill.let {
-                        if (it is Color) fill = it.color
+
+                    compositionNode.style.stroke.let {
+                        stroke = when (it) {
+                            is Paint.RGB -> it.color
+                            Paint.None -> null
+                            Paint.CurrentColor -> null
+                        }
                     }
-                    compositionNode.fillOpacity.let {
-                        if (it is FillOpacity) fill = fill?.opacify(it.fillOpacity)
+                    compositionNode.style.strokeOpacity.let {
+                        stroke = when (it) {
+                            is Numeric.Rational -> stroke?.opacify(it.value)
+                        }
                     }
-                    compositionNode.stroke.let {
-                        if (it is Color) stroke = it.color
+                    compositionNode.style.strokeWeight.let {
+                        strokeWeight = when (it) {
+                            is Length.Pixels -> it.value
+                            is Length.Percent -> composition.normalizedDiagonalLength() * it.value / 100.0
+                        }
                     }
-                    compositionNode.strokeOpacity.let {
-                        if (it is StrokeOpacity) stroke = stroke?.opacify(it.strokeOpacity)
+                    compositionNode.style.miterlimit.let {
+                        miterlimit = when (it) {
+                            is Numeric.Rational -> it.value
+                        }
                     }
-                    compositionNode.strokeWeight.let {
-                        if (it is StrokeWeight) strokeWeight = it.weight
+                    compositionNode.style.lineCap.let {
+                        lineCap = it.value
                     }
-                    compositionNode.miterlimit.let {
-                        if (it is Miterlimit) miterlimit = it.limit
+                    compositionNode.style.lineJoin.let {
+                        lineJoin = it.value
                     }
-                    compositionNode.lineCap.let {
-                        if (it is org.openrndr.shape.LineCap) lineCap = it.cap
+                    compositionNode.style.fill.let {
+                        fill = when (it) {
+                            is Paint.RGB -> it.color
+                            is Paint.None -> null
+                            is Paint.CurrentColor -> null
+                        }
                     }
-                    compositionNode.lineJoin.let {
-                        if (it is org.openrndr.shape.LineJoin) lineJoin = it.join
+                    compositionNode.style.fillOpacity.let {
+                        fill = when (it) {
+                            is Numeric.Rational -> fill?.opacify(it.value)
+                        }
                     }
-                    compositionNode.opacity.let {
-                        if (it is Opacity) {
-                            stroke = stroke?.opacify(it.opacity)
-                            fill = fill?.opacify(it.opacity)
+                    compositionNode.style.opacity.let {
+                        when (it) {
+                            is Numeric.Rational -> {
+                                stroke = stroke?.opacify(it.value)
+                                fill = fill?.opacify(it.value)
+                            }
                         }
                     }
                     shape(compositionNode.shape)

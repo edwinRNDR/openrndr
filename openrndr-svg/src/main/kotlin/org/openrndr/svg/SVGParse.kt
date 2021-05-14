@@ -1,74 +1,98 @@
 package org.openrndr.svg
 
 import org.jsoup.nodes.*
+import org.jsoup.nodes.Element
 import org.openrndr.color.*
 import org.openrndr.math.*
 import org.openrndr.math.transforms.*
 import org.openrndr.shape.*
+import org.openrndr.shape.Paint
+import org.openrndr.shape.Rectangle
 import java.util.regex.*
+import javax.swing.text.*
 import kotlin.math.*
+import kotlin.text.MatchResult
+
+internal sealed interface PropertyRegex {
+
+    val regex: Regex
+
+    companion object {
+        const val wsp = "(?:\\s|\\A|\\Z)+"
+        const val commaWsp = "(?:\\s*,?\\s+)"
+        const val align = "(?<align>[xy](?:Min|Mid|Max)[XY](?:Min|Mid|Max))*"
+        const val meetOrSlice = "(?<meetOrSlice>meet|slice)*"
+        const val unitIdentifier = "in|pc|pt|px|cm|mm|q"
+    }
+
+    object Any : PropertyRegex {
+        override val regex = Regex(".+")
+    }
+
+    object Number : PropertyRegex {
+        override val regex = Regex("[+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?:[eE][+-]?\\d+)?")
+    }
+
+    object NumberList : PropertyRegex {
+        override val regex = Regex("(?:${Number.regex}$commaWsp)*${Number.regex}")
+    }
+
+    object Length : PropertyRegex {
+        override val regex = Regex("(?<number>${Number.regex})(?<ident>$unitIdentifier)?")
+    }
+
+    object Percentage : PropertyRegex {
+        override val regex = Regex("${Number.regex}%")
+    }
+
+    object LengthOrPercentage : PropertyRegex {
+        override val regex = Regex("${Length.regex}|${Percentage.regex}")
+    }
+
+    object PreserveAspectRatio : PropertyRegex {
+        override val regex = Regex("$wsp${align}$wsp${meetOrSlice}$wsp")
+    }
+
+    object RGBFunctional : PropertyRegex {
+        // Matches rgb(255, 255, 255)
+        private val rgb8BitRegex = Regex("(${Number.regex})${commaWsp}(${Number.regex})${commaWsp}(${Number.regex})")
+        // Matches rgb(100%, 100%, 100%)
+        private val rgbPercentageRegex = Regex("(${Number.regex})%${commaWsp}(${Number.regex})%${commaWsp}(${Number.regex})%")
+
+        override val regex = Regex("${wsp}rgb\\(\\s*(?>$rgb8BitRegex\\s*|\\s*$rgbPercentageRegex)\\s*\\)$wsp")
+    }
+}
 
 internal object SVGParse {
-
-    // Matches a single integer value
-    private val numRegex = Regex("[+-]?\\d+")
-
-    // Positive rational value
-    private val ratNumRegex = Regex("\\+?(?>\\d+\\.?\\d*|\\.\\d+)")
-
-    // Comma and whitespace separator
-    @Suppress("RegExpUnnecessaryNonCapturingGroup")
-    private val cR = Regex("(?:\\s*,?\\s*)")
-
-    // Strict separator regex, allows only whitespace or beginning/ending of string
-    private val sR = Regex("(?:\\s|\\A|\\Z)+")
-
-    // Captures a length value and its unit type if present
-    private val lenRegex = Regex("(?<value>$numRegex)(?<type>in|pc|pt|px|cm|mm|q|em|ex|ch|%)?")
-    private val numListRegex = Regex("$numRegex$cR")
-
-    private val alignRegex = Regex("(?<align>[xy](?:Min|Mid|Max)[XY](?:Min|Mid|Max))*")
-    private val meetRegex = Regex("(?<meet>meet|slice)*")
-
-    // Captures alignment value and/or the meet value
-    private val aspectRatioRegex = Regex("$sR$alignRegex$sR$meetRegex$sR")
-
-    // Matches rgb(255, 255, 255)
-    private val rgb8BitRegex = Regex("($ratNumRegex)$cR($ratNumRegex)$cR($ratNumRegex)")
-    // Matches rgb(100%, 100%, 100%)
-    private val rgbPercentageRegex = Regex("($ratNumRegex)%$cR($ratNumRegex)%$cR($ratNumRegex)%")
-
-    private val rgbRegex = Regex("${sR}rgb\\(\\s*(?>$rgb8BitRegex\\s*|\\s*$rgbPercentageRegex)\\s*\\)$sR")
-
-    fun viewBox(element: Element): Rectangle? {
+    fun viewBox(element: Element): ViewBox {
         val viewBoxValue = element.attr(Attr.VIEW_BOX)
 
-        val (minX, minY, width, height) = numListRegex.findAll(viewBoxValue).let {
-            val list = it.toList()
+        val (minX, minY, width, height) = PropertyRegex.NumberList.regex.matches(viewBoxValue).let {
+            val list = viewBoxValue.split(PropertyRegex.commaWsp.toRegex())
             when (list.size) {
                 // Early return and signal that the element should not be rendered at all
-                1 -> if (list[0].value.toDouble() == 0.0) {
-                    return null
+                1 -> if (list[0].toDoubleOrNull() == 0.0 || list[0].toDoubleOrNull() == null) {
+                    return ViewBox.None
                 } else {
                     // Interpret as height
-                    listOf(0.0, 0.0, 0.0, list[0].value.toDouble())
+                    listOf(0.0, 0.0, 0.0, list[0].toDouble())
                 }
-                2 -> listOf(0.0, 0.0, list[0].value.toDouble(), list[1].value.toDouble())
-                3 -> listOf(0.0, list[0].value.toDouble(), list[1].value.toDouble(), list[2].value.toDouble())
-                4 -> list.map { item -> item.value.toDouble() }
-                else -> return null
+                2 -> listOf(0.0, 0.0, list[0].toDouble(), list[1].toDouble())
+                3 -> listOf(0.0, list[0].toDouble(), list[1].toDouble(), list[2].toDouble())
+                4 -> list.map { item -> item.toDouble() }
+                else -> return ViewBox.Initial
             }
         }
 
-        return Rectangle(minX, minY, width.coerceAtLeast(0.0), height.coerceAtLeast(0.0))
+        return ViewBox.Value(Rectangle(minX, minY, width.coerceAtLeast(0.0), height.coerceAtLeast(0.0)))
     }
 
-    fun preserveAspectRatio(element: Element): Alignment {
+    fun preserveAspectRatio(element: Element): AspectRatio {
         val aspectRatioValue = element.attr(Attr.PRESERVE_ASPECT_RATIO)
 
-        val (alignmentValue, meetValue) = aspectRatioRegex.matchEntire(aspectRatioValue).let {
-            val value = (it?.groups as? MatchNamedGroupCollection)?.get("align")?.value ?: "xMidYMid"
-            val type = (it?.groups as? MatchNamedGroupCollection)?.get("meet")?.value ?: "meet"
+        val (alignmentValue, meetValue) = PropertyRegex.PreserveAspectRatio.regex.matchEntire(aspectRatioValue).let {
+            val value = (it?.groups as? MatchNamedGroupCollection)?.get("align")?.value
+            val type = (it?.groups as? MatchNamedGroupCollection)?.get("meetOrSlice")?.value
 
             value to type
         }
@@ -80,17 +104,17 @@ internal object SVGParse {
         }
 
         return when (alignmentValue) {
-            "none" -> Alignment(Align.NONE, Align.NONE, meet)
-            "xMinYMin" -> Alignment(Align.MIN, Align.MIN, meet)
-            "xMidYMin" -> Alignment(Align.MID, Align.MIN, meet)
-            "xMaxYMin" -> Alignment(Align.MAX, Align.MIN, meet)
-            "xMinYMid" -> Alignment(Align.MIN, Align.MID, meet)
-            "xMaxYMid" -> Alignment(Align.MAX, Align.MID, meet)
-            "xMinYMax" -> Alignment(Align.MIN, Align.MAX, meet)
-            "xMidYMax" -> Alignment(Align.MID, Align.MAX, meet)
-            "xMaxYMax" -> Alignment(Align.MAX, Align.MAX, meet)
-            // The lacuna value, "xMidYMid"
-            else -> Alignment(Align.MID, Align.MID, meet)
+            "none" -> AspectRatio(Align.NONE, meet)
+            "xMinYMin" -> AspectRatio(Align.X_MIN_Y_MIN, meet)
+            "xMidYMin" -> AspectRatio(Align.X_MID_Y_MIN, meet)
+            "xMaxYMin" -> AspectRatio(Align.X_MAX_Y_MIN, meet)
+            "xMinYMid" -> AspectRatio(Align.X_MIN_Y_MID, meet)
+            "xMidYMid" -> AspectRatio(Align.X_MID_Y_MID, meet)
+            "xMaxYMid" -> AspectRatio(Align.X_MAX_Y_MID, meet)
+            "xMinYMax" -> AspectRatio(Align.X_MIN_Y_MAX, meet)
+            "xMidYMax" -> AspectRatio(Align.X_MID_Y_MAX, meet)
+            "xMaxYMax" -> AspectRatio(Align.X_MAX_Y_MAX, meet)
+            else -> AspectRatio(Align.X_MID_Y_MID, meet)
         }
     }
 
@@ -103,26 +127,80 @@ internal object SVGParse {
 
         // There's no way this'll throw an OOB, right?
         val (x, y, width, height) = values.map { str ->
-            lenRegex.matchEntire(str).let {
-                val value = (it?.groups as? MatchNamedGroupCollection)?.get("value")?.value?.toDouble() ?: 0.0
-                val type = Length.UnitType.valueOf(
-                    (it?.groups as? MatchNamedGroupCollection)?.get("type")?.value?.uppercase() ?: "PX"
+            PropertyRegex.Length.regex.matchEntire(str).let {
+                val value = (it?.groups as? MatchNamedGroupCollection)?.get("number")?.value?.toDouble() ?: 0.0
+                val type = Length.UnitIdentifier.valueOf(
+                    (it?.groups as? MatchNamedGroupCollection)?.get("ident")?.value?.uppercase() ?: "PX"
                 )
 
-                Length(value, type)
+                when (type) {
+                    Length.UnitIdentifier.IN -> Length.Pixels.fromInches(value)
+                    Length.UnitIdentifier.PC -> Length.Pixels.fromPicas(value)
+                    Length.UnitIdentifier.PT -> Length.Pixels.fromPoints(value)
+                    Length.UnitIdentifier.PX -> Length.Pixels(value)
+                    Length.UnitIdentifier.CM -> Length.Pixels.fromCentimeters(value)
+                    Length.UnitIdentifier.MM -> Length.Pixels.fromMillimeters(value)
+                    Length.UnitIdentifier.Q -> Length.Pixels.fromQuarterMillimeters(value)
+                }
             }
         }
 
         return CompositionDimensions(x, y, width, height)
     }
 
+    fun lineJoin(value: String): LineJoin {
+        return when (value) {
+            "miter" -> LineJoin.Miter
+            "bevel" -> LineJoin.Bevel
+            "round" -> LineJoin.Round
+            else -> LineJoin.Miter
+        }
+    }
+
+    fun lineCap(value: String): LineCap {
+        return when (value) {
+            "round" -> LineCap.Round
+            "butt" -> LineCap.Butt
+            "square" -> LineCap.Square
+            else -> LineCap.Butt
+        }
+    }
+
+    fun number(value: String): Numeric {
+        return when (val match = PropertyRegex.Number.regex.matchEntire(value)) {
+            is MatchResult -> Numeric.Rational(match.groups[0]?.value?.toDouble() ?: 0.0)
+            else -> Numeric.Rational(0.0)
+        }
+    }
+
+    fun length(value: String): Length {
+        val (number, ident) = PropertyRegex.Length.regex.matchEntire(value).let {
+            val number = (it?.groups as? MatchNamedGroupCollection)?.get("number")?.value?.toDouble() ?: 0.0
+            val ident = Length.UnitIdentifier.valueOf(
+                (it?.groups as? MatchNamedGroupCollection)?.get("ident")?.value?.uppercase() ?: "PX"
+            )
+
+            number to ident
+        }
+
+        return when (ident) {
+            Length.UnitIdentifier.IN -> Length.Pixels.fromInches(number)
+            Length.UnitIdentifier.PC -> Length.Pixels.fromPicas(number)
+            Length.UnitIdentifier.PT -> Length.Pixels.fromPoints(number)
+            Length.UnitIdentifier.PX -> Length.Pixels(number)
+            Length.UnitIdentifier.CM -> Length.Pixels.fromCentimeters(number)
+            Length.UnitIdentifier.MM -> Length.Pixels.fromMillimeters(number)
+            Length.UnitIdentifier.Q -> Length.Pixels.fromQuarterMillimeters(number)
+        }
+    }
+
     // Syntax should map to https://www.w3.org/TR/css-transforms-1/#svg-syntax
-    fun transform(element: Element): Matrix44 {
+    fun transform(element: Element): Transform {
         var transform = Matrix44.IDENTITY
 
         val transformValue = element.attr(Attr.TRANSFORM).let {
             it.ifEmpty {
-                return transform
+                return Transform.None
             }
         }
 
@@ -200,7 +278,11 @@ internal object SVGParse {
             }
         }
 
-        return transform
+        return if (transform != Matrix44.IDENTITY) {
+            Transform.Matrix(transform)
+        } else {
+            Transform.None
+        }
     }
 
     private fun pointsToCommands(pointsValues: String): List<Command> {
@@ -243,17 +325,13 @@ internal object SVGParse {
         val xe = dx + width
         // y-end
         val ye = dy + height
-        // x-middle
-        val xm = dx + width / 2
-        // y-middle
-        val ym = dy + height / 2
 
         return listOf(
-            Command("M", dx, ym),
-            Command("C", dx, ym - oy, xm - ox, dy, xm, dy),
-            Command("C", xm + ox, dy, xe, ym - oy, xe, ym),
-            Command("C", xe, ym + oy, xm + ox, ye, xm, ye),
-            Command("C", xm - ox, ye, dx, ym + oy, dx, ym),
+            Command("M", dx, y),
+            Command("C", dx, y - oy, x - ox, dy, x, dy),
+            Command("C", x + ox, dy, xe, y - oy, xe, y),
+            Command("C", xe, y + oy, x + ox, ye, x, ye),
+            Command("C", x - ox, ye, dx, y + oy, dx, y),
             Command("z")
         )
     }
@@ -300,7 +378,7 @@ internal object SVGParse {
     }
 
     fun line(element: Element): List<Command> {
-        // TODO: Error handling?
+        // TODO! Error handling?
         val x1 = element.attr(Attr.X1).toDouble()
         val x2 = element.attr(Attr.X2).toDouble()
         val y1 = element.attr(Attr.Y1).toDouble()
@@ -337,27 +415,27 @@ internal object SVGParse {
         return commands
     }
 
+    fun color(colorValue: String): Paint {
+        val col = colorValue.lowercase()
 
-    internal fun color(scolor: String): ColorRGBa? {
         return when {
-            scolor.isEmpty() || scolor == "none" -> null
-            scolor.startsWith("#") -> {
-                val normalizedColor = normalizeColorHex(scolor).replace("#", "")
+            col.isEmpty() -> Paint.None
+            col.startsWith("#") -> {
+                val normalizedColor = normalizeColorHex(col).replace("#", "")
                 val v = normalizedColor.toLong(radix = 16)
                 val vi = v.toInt()
                 val r = vi shr 16 and 0xff
                 val g = vi shr 8 and 0xff
                 val b = vi and 0xff
-                ColorRGBa(r / 255.0, g / 255.0, b / 255.0, 1.0)
+                Paint.RGB(ColorRGBa(r / 255.0, g / 255.0, b / 255.0, 1.0))
             }
-            scolor.startsWith("rgb(") -> rgbFunction(scolor)
-            scolor == "transparent" -> ColorRGBa.TRANSPARENT
-            scolor in cssColorNames -> ColorRGBa.fromHex(cssColorNames[scolor]!!)
-            else -> null
+            col.startsWith("rgb(") -> rgbFunction(col)
+            col in cssColorNames -> Paint.RGB(ColorRGBa.fromHex(cssColorNames[col]!!))
+            else -> Paint.None
         }
     }
 
-    fun normalizeColorHex(colorHex: String): String {
+    private fun normalizeColorHex(colorHex: String): String {
         val colorHexRegex = "#?([0-9a-f]{3,6})".toRegex(RegexOption.IGNORE_CASE)
 
         val matchResult = colorHexRegex.matchEntire(colorHex)
@@ -376,10 +454,10 @@ internal object SVGParse {
     /**
      * Parses rgb functional notation as described in CSS2 spec
      */
-    fun rgbFunction(rgbValue: String): ColorRGBa? {
+    private fun rgbFunction(rgbValue: String): Paint {
 
         val result =
-            rgbRegex.matchEntire(rgbValue) ?: return null
+            PropertyRegex.RGBFunctional.regex.matchEntire(rgbValue) ?: return Paint.None
 
         // The first three capture groups contain values if the match was without percentages
         // Otherwise the values are in capture groups #4 to #6.
@@ -395,10 +473,10 @@ internal object SVGParse {
             .drop(1)
             .filter { it.isNotBlank() }
             .map { it.toDouble().coerceIn(0.0..divisor) / divisor }
-        return ColorRGBa(r, g, b)
+        return Paint.RGB(ColorRGBa(r, g, b))
     }
 
-    fun expandToTwoDigitsPerComponent(hexValue: String) =
+    private fun expandToTwoDigitsPerComponent(hexValue: String) =
         hexValue.asSequence()
             .map { "$it$it" }
             .reduce { accumulatedHex, component -> accumulatedHex + component }

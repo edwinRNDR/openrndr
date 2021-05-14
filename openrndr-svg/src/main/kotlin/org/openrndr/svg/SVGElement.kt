@@ -11,33 +11,22 @@ internal sealed class SVGElement(element: Element?) {
     var tag: String = element?.tagName() ?: ""
     var id: String = element?.id() ?: ""
 
-    var transform: Matrix44 = Matrix44.IDENTITY
-
-    var fill: CompositionColor = InheritColor
-    var stroke: CompositionColor = InheritColor
-    var strokeWeight: CompositionStrokeWeight = InheritStrokeWeight
-    var lineCap: CompositionLineCap = InheritLineCap
-    var lineJoin: CompositionLineJoin = InheritLineJoin
-    var miterlimit: CompositionMiterlimit = InheritMiterlimit
-    var strokeOpacity: CompositionStrokeOpacity = InheritStrokeOpacity
-    var fillOpacity: CompositionFillOpacity = InheritFillOpacity
-    var opacity: CompositionOpacity = InheritOpacity
-
+    open var style = Style()
     abstract fun handleAttribute(attribute: Attribute)
 
     // Any element can have a style attribute to pass down properties
     fun styleProperty(key: String, value: String) {
         when (key) {
-            Prop.FILL -> fill = Color(SVGParse.color(value))
-            Prop.STROKE -> stroke = Color(SVGParse.color(value))
-            Prop.STROKE_LINECAP -> lineCap = LineCap(org.openrndr.draw.LineCap.valueOf(value.uppercase()))
-            Prop.STROKE_LINEJOIN -> lineJoin = LineJoin(org.openrndr.draw.LineJoin.valueOf(value.uppercase()))
-            Prop.STROKE_MITERLIMIT -> miterlimit = Miterlimit(value.toDouble())
-            Prop.STROKE_OPACITY -> strokeOpacity = StrokeOpacity(value.toDouble())
-            Prop.STROKE_WIDTH -> strokeWeight = StrokeWeight(value.toDouble())
-            Prop.FILL_OPACITY -> fillOpacity = FillOpacity(value.toDouble())
-            Prop.OPACITY -> opacity = Opacity(value.toDouble())
-            else -> logger.error("Unknown property: $key")
+            Prop.STROKE -> style.stroke = SVGParse.color(value)
+            Prop.STROKE_OPACITY -> style.strokeOpacity = SVGParse.number(value)
+            Prop.STROKE_WIDTH -> style.strokeWeight = SVGParse.length(value)
+            Prop.STROKE_MITERLIMIT -> style.miterlimit = SVGParse.number(value)
+            Prop.STROKE_LINECAP -> style.lineCap = SVGParse.lineCap(value)
+            Prop.STROKE_LINEJOIN -> style.lineJoin = SVGParse.lineJoin(value)
+            Prop.FILL -> style.fill = SVGParse.color(value)
+            Prop.FILL_OPACITY -> style.fillOpacity = SVGParse.number(value)
+            Prop.OPACITY -> style.opacity = SVGParse.number(value)
+            else -> logger.warn("Unknown property: $key")
         }
     }
 
@@ -55,8 +44,13 @@ internal sealed class SVGElement(element: Element?) {
 
 /** <svg> element */
 internal class SVGSVGElement(element: Element) : SVGGroup(element) {
-    var viewBox: Rectangle? = SVGParse.viewBox(this.element)
-    var preserveAspectRatio: Alignment = SVGParse.preserveAspectRatio(this.element)
+    var documentStyle: DocumentStyle = DocumentStyle()
+
+    init {
+        documentStyle.viewBox = SVGParse.viewBox(this.element)
+        documentStyle.preserveAspectRatio = SVGParse.preserveAspectRatio(this.element)
+    }
+
     var bounds = SVGParse.bounds(this.element)
 }
 
@@ -89,7 +83,7 @@ internal open class SVGGroup(val element: Element, val elements: MutableList<SVG
         when (attribute.key) {
             // Attributes can also be style properties, in which case they're passed on
             in Prop.list -> styleProperty(attribute.key, attribute.value)
-            Attr.TRANSFORM -> transform = SVGParse.transform(this.element)
+            Attr.TRANSFORM -> style.transform = SVGParse.transform(this.element)
         }
     }
 }
@@ -404,7 +398,7 @@ internal class SVGPath(val element: Element? = null) : SVGElement(element) {
             when (attribute.key) {
                 // Attributes can also be style properties, in which case they're passed on
                 in Prop.list -> styleProperty(attribute.key, attribute.value)
-                Attr.TRANSFORM -> transform = SVGParse.transform(this.element)
+                Attr.TRANSFORM -> style.transform = SVGParse.transform(this.element)
             }
         }
     }

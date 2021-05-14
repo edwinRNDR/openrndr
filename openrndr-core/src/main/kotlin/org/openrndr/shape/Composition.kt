@@ -1,15 +1,11 @@
 package org.openrndr.shape
 
-import org.openrndr.color.ColorRGBa
-import org.openrndr.draw.ColorBuffer
-import org.openrndr.draw.LineCap
-import org.openrndr.draw.LineJoin
-import org.openrndr.draw.ShadeStyle
+import org.openrndr.color.*
+import org.openrndr.draw.*
 import org.openrndr.math.*
 import org.openrndr.math.transforms.*
 import kotlin.math.*
-import kotlin.reflect.KMutableProperty0
-import kotlin.reflect.KProperty
+import kotlin.reflect.*
 
 /**
  * Describes a node in a composition
@@ -22,19 +18,13 @@ sealed class CompositionNode {
 
     var parent: CompositionNode? = null
 
-    var transform = Matrix44.IDENTITY
+    var style: Style = Style()
 
-    var fill: CompositionColor = InheritColor
-    var stroke: CompositionColor = InheritColor
-    var strokeWeight: CompositionStrokeWeight = InheritStrokeWeight
-    var lineCap: CompositionLineCap = InheritLineCap
-    var lineJoin: CompositionLineJoin = InheritLineJoin
-    var miterlimit: CompositionMiterlimit = InheritMiterlimit
-    var strokeOpacity: CompositionStrokeOpacity = InheritStrokeOpacity
-    var fillOpacity: CompositionFillOpacity = InheritFillOpacity
-    var opacity: CompositionOpacity = InheritOpacity
-
-    var shadeStyle: CompositionShadeStyle = InheritShadeStyle
+    val computedStyle: Style
+        get() = when (val p = parent) {
+            is CompositionNode -> style inherit p.computedStyle
+            else -> style
+        }
 
     /**
      * node attributes, these are used for loading and saving to SVG
@@ -51,184 +41,44 @@ sealed class CompositionNode {
      */
     abstract val bounds: Rectangle
 
-    // The effective styles inherited/calculated from the parent nodes and the current node.
-    // Nodes essentially inherit style attributes from their parent by default,
-    // unless explicitly defined otherwise in the node.
-
-    val effectiveShadeStyle: ShadeStyle?
-        get() {
-            return shadeStyle.let {
-                when (it) {
-                    is InheritShadeStyle -> parent?.effectiveShadeStyle
-                    is CShadeStyle -> it.shadeStyle
-                }
-            }
-        }
-
-    val effectiveStroke: ColorRGBa?
-        get() {
-            return stroke.let {
-                when (it) {
-                    is InheritColor -> parent?.effectiveStroke
-                    is Color -> it.color
-                }
-            }
-        }
-
-    val effectiveStrokeWeight: Double?
-        get() {
-            return strokeWeight.let {
-                when (it) {
-                    is InheritStrokeWeight -> parent?.effectiveStrokeWeight
-                    is StrokeWeight -> it.weight
-                }
-            }
-        }
-
-    val effectiveLineCap: LineCap?
-        get() {
-            return lineCap.let {
-                when (it) {
-                    is InheritLineCap -> parent?.effectiveLineCap
-                    is org.openrndr.shape.LineCap -> it.cap
-                }
-            }
-        }
-
-    val effectiveLineJoin: LineJoin?
-        get() {
-            return lineJoin.let {
-                when (it) {
-                    is InheritLineJoin -> parent?.effectiveLineJoin
-                    is org.openrndr.shape.LineJoin -> it.join
-                }
-            }
-        }
-
-    val effectiveMiterlimit: Double?
-        get() {
-            return miterlimit.let {
-                when (it) {
-                    is InheritMiterlimit -> parent?.effectiveMiterlimit
-                    is Miterlimit -> it.limit
-                }
-            }
-        }
-
-    val effectiveStrokeOpacity: Double?
-        get() {
-            return strokeOpacity.let {
-                when (it) {
-                    is InheritStrokeOpacity -> parent?.effectiveStrokeOpacity
-                    is StrokeOpacity -> it.strokeOpacity
-                }
-            }
-        }
-
-    val effectiveFill: ColorRGBa?
-        get() {
-            return fill.let {
-                when (it) {
-                    is InheritColor -> parent?.effectiveFill ?: ColorRGBa.BLACK
-                    is Color -> it.color
-                }
-            }
-        }
-
-    val effectiveFillOpacity: Double?
-        get() {
-            return fillOpacity.let {
-                when (it) {
-                    is InheritFillOpacity -> parent?.effectiveFillOpacity
-                    is FillOpacity -> it.fillOpacity
-                }
-            }
-        }
-
-    val effectiveOpacity: Double?
-        get() {
-            return opacity.let {
-                when (it) {
-                    is InheritOpacity -> parent?.effectiveOpacity
-                    is Opacity -> it.opacity
-                }
-            }
-        }
-
+    // TODO! This is no good
     val effectiveTransform: Matrix44
-        get() {
-            return if (transform === Matrix44.IDENTITY) {
-                parent?.effectiveTransform ?: Matrix44.IDENTITY
-            } else {
-                transform * (parent?.effectiveTransform ?: Matrix44.IDENTITY)
-            }
-        }
+        get() = style.transform.value * (parent?.effectiveTransform ?: Matrix44.IDENTITY)
 }
 
-infix fun KMutableProperty0<CompositionShadeStyle>.`=`(shadeStyle: ShadeStyle?) = this.set(CShadeStyle(shadeStyle))
-infix fun KMutableProperty0<CompositionColor>.`=`(color: ColorRGBa?) = this.set(Color(color))
-@JvmName("=CompositionStrokeWeight")
-infix fun KMutableProperty0<CompositionStrokeWeight>.`=`(weight: Double) = this.set(StrokeWeight(weight))
-infix fun KMutableProperty0<CompositionLineCap>.`=`(cap: LineCap) = this.set(LineCap(cap))
-infix fun KMutableProperty0<CompositionLineJoin>.`=`(join: LineJoin) = this.set(LineJoin(join))
-@JvmName("=CompositionMiterlimit")
-infix fun KMutableProperty0<CompositionMiterlimit>.`=`(limit: Double) = this.set(Miterlimit(limit))
-@JvmName("=CompositionStrokeOpacity")
-infix fun KMutableProperty0<CompositionStrokeOpacity>.`=`(strokeOpacity: Double) = this.set(StrokeOpacity(strokeOpacity))
-@JvmName("=CompositionFillOpacity")
-infix fun KMutableProperty0<CompositionFillOpacity>.`=`(fillOpacity: Double) = this.set(FillOpacity(fillOpacity))
-@JvmName("=CompositionOpacity")
-infix fun KMutableProperty0<CompositionOpacity>.`=`(opacity: Double) = this.set(Opacity(opacity))
+infix fun KMutableProperty0<Paint>.`=`(color: ColorRGBa?) = this.set(when (color) {
+    is ColorRGBa -> Paint.RGB(color)
+    else -> Paint.None
+})
+@JvmName("=Numeric")
+infix fun KMutableProperty0<Numeric>.`=`(value: Double) = this.set(Numeric.Rational(value))
+@JvmName("=Length")
+infix fun KMutableProperty0<Length>.`=`(value: Double) = this.set(Length.Pixels(value))
+infix fun KMutableProperty0<LineCap>.`=`(cap: org.openrndr.draw.LineCap) = this.set(when (cap) {
+    org.openrndr.draw.LineCap.SQUARE -> LineCap.Square
+    org.openrndr.draw.LineCap.BUTT -> LineCap.Butt
+    org.openrndr.draw.LineCap.ROUND -> LineCap.Round
+})
+infix fun KMutableProperty0<LineJoin>.`=`(join: org.openrndr.draw.LineJoin) = this.set(when (join) {
+    org.openrndr.draw.LineJoin.MITER -> LineJoin.Miter
+    org.openrndr.draw.LineJoin.BEVEL -> LineJoin.Bevel
+    org.openrndr.draw.LineJoin.ROUND -> LineJoin.Round
+})
+infix fun KMutableProperty0<Transform>.`=`(value: Matrix44): Unit = this.set(Transform.Matrix(value))
 
-operator fun KMutableProperty0<CompositionShadeStyle>.setValue(thisRef: Any?, property: KProperty<*>, value: ShadeStyle) {
-    this.set(CShadeStyle(value))
+operator fun KMutableProperty0<Shade>.setValue(thisRef: Style, property: KProperty<*>, value: ShadeStyle) {
+    this.set(Shade.Value(value))
 }
 
-// Cascading classes
-
-sealed class CompositionColor
-object InheritColor : CompositionColor()
-data class Color(val color: ColorRGBa?) : CompositionColor()
-
-sealed class CompositionShadeStyle
-object InheritShadeStyle : CompositionShadeStyle()
-data class CShadeStyle(val shadeStyle: ShadeStyle?) : CompositionShadeStyle()
-
-sealed class CompositionStrokeWeight
-object InheritStrokeWeight : CompositionStrokeWeight()
-data class StrokeWeight(val weight: Double) : CompositionStrokeWeight()
-
-sealed class CompositionLineCap
-object InheritLineCap : CompositionLineCap()
-data class LineCap(val cap: LineCap) : CompositionLineCap()
-
-sealed class CompositionLineJoin
-object InheritLineJoin : CompositionLineJoin()
-data class LineJoin(val join: LineJoin) : CompositionLineJoin()
-
-sealed class CompositionMiterlimit
-object InheritMiterlimit : CompositionMiterlimit()
-data class Miterlimit(val limit: Double) : CompositionMiterlimit()
-
-sealed class CompositionStrokeOpacity
-object InheritStrokeOpacity : CompositionStrokeOpacity()
-data class StrokeOpacity(val strokeOpacity: Double) : CompositionStrokeOpacity()
-
-sealed class CompositionFillOpacity
-object InheritFillOpacity : CompositionFillOpacity()
-data class FillOpacity(val fillOpacity: Double) : CompositionFillOpacity()
-
-sealed class CompositionOpacity
-object InheritOpacity : CompositionOpacity()
-data class Opacity(val opacity: Double) : CompositionOpacity()
-
-private fun transform(node: CompositionNode): Matrix44 =
-        (node.parent?.let { transform(it) } ?: Matrix44.IDENTITY) * node.transform
+fun transform(node: CompositionNode): Matrix44 =
+    (node.parent?.let { transform(it) } ?: Matrix44.IDENTITY) * ((node.style.transform as? Transform.Matrix)?.value
+        ?: Matrix44.IDENTITY)
 
 /**
  * a [CompositionNode] that holds a single image [ColorBuffer]
  */
-class ImageNode(var image: ColorBuffer, var x: Double, var y: Double, var width: Double, var height: Double) : CompositionNode() {
+class ImageNode(var image: ColorBuffer, var x: Double, var y: Double, var width: Double, var height: Double) :
+    CompositionNode() {
     override val bounds: Rectangle
         get() = Rectangle(0.0, 0.0, width, height).contour.transform(transform(this)).bounds
 }
@@ -254,17 +104,9 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
         return ShapeNode(shape).also {
             it.id = id
             it.parent = parent
-            it.transform = transform(this)
-            it.fill = fill
-            it.stroke = stroke
-            it.strokeWeight = strokeWeight
-            it.lineCap = lineCap
-            it.lineJoin = lineJoin
-            it.miterlimit = miterlimit
-            it.strokeOpacity = strokeOpacity
-            it.fillOpacity = fillOpacity
-            it.opacity = opacity
-            it.shadeStyle = shadeStyle
+            it.style = style.also { st ->
+                st.transform = Transform.Matrix(transform(this))
+            }
             it.attributes = attributes
         }
     }
@@ -276,37 +118,22 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
         return ShapeNode(shape.transform(transform(this))).also {
             it.id = id
             it.parent = parent
-            it.transform = Matrix44.IDENTITY
-            it.fill = Color(effectiveFill)
-            it.stroke = Color(effectiveStroke)
-            it.strokeWeight = StrokeWeight(effectiveStrokeWeight ?: 0.0)
-            // TODO! Use effective values?
-            it.lineCap = lineCap
-            it.lineJoin = lineJoin
-            it.miterlimit = miterlimit
-            it.strokeOpacity = strokeOpacity
-            it.fillOpacity = fillOpacity
-            it.opacity = opacity
-            it.shadeStyle = shadeStyle
+            it.style = computedStyle
             it.attributes = attributes
         }
     }
 
-    fun copy(id: String? = this.id, parent: CompositionNode? = null, transform: Matrix44 = this.transform, fill: CompositionColor = this.fill, stroke: CompositionColor = this.stroke, shape: Shape = this.shape): ShapeNode {
+    fun copy(
+        id: String? = this.id,
+        parent: CompositionNode? = null,
+        style: Style = this.style,
+        attributes: MutableMap<String, String?> = this.attributes,
+        shape: Shape = this.shape
+    ): ShapeNode {
         return ShapeNode(shape).also {
             it.id = id
             it.parent = parent
-            it.transform = transform
-            it.fill = fill
-            it.stroke = stroke
-            it.strokeWeight = strokeWeight
-            it.lineCap = lineCap
-            it.lineJoin = lineJoin
-            it.miterlimit = miterlimit
-            it.strokeOpacity = strokeOpacity
-            it.fillOpacity = fillOpacity
-            it.opacity = opacity
-            it.shadeStyle = shadeStyle
+            it.style = style
             it.attributes = attributes
         }
     }
@@ -347,22 +174,16 @@ open class GroupNode(open val children: MutableList<CompositionNode> = mutableLi
             return children.map { it.bounds }.bounds
         }
 
-    // TODO! Should this use a data class instead?
-    fun copy(id: String? = this.id, parent: CompositionNode? = null, transform: Matrix44 = this.transform, fill: CompositionColor = this.fill, stroke: CompositionColor = this.stroke, children: MutableList<CompositionNode> = this.children): GroupNode {
+    fun copy(
+        id: String? = this.id,
+        parent: CompositionNode? = null,
+        style: Style = this.style,
+        children: MutableList<CompositionNode> = this.children
+    ): GroupNode {
         return GroupNode(children).also {
             it.id = id
             it.parent = parent
-            it.transform = transform
-            it.fill = fill
-            it.stroke = stroke
-            it.strokeWeight = strokeWeight
-            it.lineCap = lineCap
-            it.lineJoin = lineJoin
-            it.miterlimit = miterlimit
-            it.strokeOpacity = strokeOpacity
-            it.fillOpacity = fillOpacity
-            it.opacity = opacity
-            it.shadeStyle = shadeStyle
+            it.style = style
             it.attributes = attributes
         }
     }
@@ -381,32 +202,14 @@ open class GroupNode(open val children: MutableList<CompositionNode> = mutableLi
 
 }
 
-val defaultCompositionDimensions = CompositionDimensions(0.0, 0.0, 768.0, 576.0)
+data class CompositionDimensions(val x: Length, val y: Length, val width: Length, val height: Length) {
+    val position = Vector2((x as Length.Pixels).value, (y as Length.Pixels).value)
+    val dimensions = Vector2((width as Length.Pixels).value, (height as Length.Pixels).value)
 
-/** Alignment options for aspect ratio */
-enum class Align {
-    NONE,
-    MIN,
-    MID,
-    MAX,
+    override fun toString(): String = "$x $y $width $height"
 }
 
-enum class MeetOrSlice {
-    MEET,
-    SLICE
-}
-
-/** Alignment for each axis */
-data class Alignment(val x: Align, val y: Align, val meetOrSlice: MeetOrSlice) {
-    init {
-        // This is how we're handling the situation where only one of the Align values is NONE but the other isn't.
-        // We're just doing this to get away with the simplicity of having an alignment option for both axes
-        // while also conforming to the SVG spec.
-        require(
-            x != Align.NONE && y != Align.NONE
-                || x == Align.NONE && y == Align.NONE
-        ) { "Either both or none of the Alignment values must be Align.NONE!" }    }
-}
+val defaultCompositionDimensions = CompositionDimensions(0.0.pixels, 0.0.pixels, 768.0.pixels, 576.0.pixels)
 
 @Deprecated("complicated semantics")
 class GroupNodeStop(children: MutableList<CompositionNode>) : GroupNode(children)
@@ -421,11 +224,16 @@ class Composition(val root: CompositionNode, var bounds: CompositionDimensions =
     /** SVG/XML namespaces */
     val namespaces = mutableMapOf<String, String>()
 
-    /** Unitless viewbox */
-    var viewBox: Rectangle? = null
+    var style: Style = Style()
+    var documentStyle: DocumentStyle = DocumentStyle()
 
-    /** Specifies how the [Composition] scales up */
-    var preserveAspectRatio: Alignment = Alignment(Align.MID, Align.MID, MeetOrSlice.MEET)
+    init {
+        val (x, y, width, height) = bounds
+        style.x = x
+        style.y = y
+        style.width = width
+        style.height = height
+    }
 
     fun findShapes() = root.findShapes()
     fun findShape(id: String): ShapeNode? {
@@ -444,56 +252,67 @@ class Composition(val root: CompositionNode, var bounds: CompositionDimensions =
 
     fun clear() = (root as? GroupNode)?.children?.clear()
 
+    internal fun normalizedDiagonalLength(): Double =
+        sqrt((bounds.dimensions.x).pow(2) + (bounds.dimensions.y).pow(2)) / sqrt(2.0)
+
     /**
      * Calculates effective viewport transformation using [viewBox] and [preserveAspectRatio].
      * As per [the SVG 2.0 spec](https://svgwg.org/svg2-draft/single-page.html#coords-ComputingAViewportsTransform)
      */
     internal fun calculateViewportTransform(): Matrix44 {
-        return when (viewBox) {
-            Rectangle.EMPTY, null -> {
-                // The intent is to not display the element
-                Matrix44.ZERO
-            }
-            is Rectangle -> {
-                val vbCorner = viewBox!!.corner
-                val vbDims = viewBox!!.dimensions
-                val eCorner = bounds.position.vector2
-                val eDims = bounds.dimensions.vector2
-                val (xAlign, yAlign, meetOrSlice) = preserveAspectRatio
+        return when (documentStyle.viewBox) {
+            ViewBox.Initial -> Matrix44.IDENTITY
+            ViewBox.None -> Matrix44.ZERO
+            is ViewBox.Value -> {
+                when (val vb = (documentStyle.viewBox as ViewBox.Value).value) {
+                    Rectangle.EMPTY -> {
+                        // The intent is to not display the element
+                        Matrix44.ZERO
+                    }
+                    else -> {
+                        val vbCorner = vb.corner
+                        val vbDims = vb.dimensions
+                        val eCorner = bounds.position
+                        val eDims = bounds.dimensions
+                        val (align, meetOrSlice) = documentStyle.preserveAspectRatio
 
-                val scale = (eDims / vbDims).let {
-                    if (xAlign != Align.NONE && yAlign != Align.NONE) {
-                        if (meetOrSlice == MeetOrSlice.MEET) {
-                            Vector2(min(it.x, it.y))
-                        } else {
-                            Vector2(max(it.x, it.y))
+                        val scale = (eDims / vbDims).let {
+                            if (align != Align.NONE) {
+                                if (meetOrSlice == MeetOrSlice.MEET) {
+                                    Vector2(min(it.x, it.y))
+                                } else {
+                                    Vector2(max(it.x, it.y))
+                                }
+                            } else {
+                                it
+                            }
                         }
-                    } else {
-                        it
-                    }
-                }
 
-                val translate = (eCorner - (vbCorner * scale)).let {
-                    val dx = when (xAlign) {
-                        Align.MAX -> eDims.x - vbDims.x * scale.x
-                        Align.MID -> (eDims.x - vbDims.x * scale.x) / 2
-                        else -> 0.0
-                    }
-                    val dy = when (yAlign) {
-                        Align.MAX -> eDims.y - vbDims.y * scale.y
-                        Align.MID -> (eDims.y - vbDims.y * scale.y) / 2
-                        else -> 0.0
-                    }
-                    it + Vector2(dx, dy)
-                }
+                        val translate = (eCorner - (vbCorner * scale)).let {
+                            val cx = eDims.x - vbDims.x * scale.x
+                            val cy = eDims.y - vbDims.y * scale.y
+                            val d = when (align) {
+                                // TODO! This first one probably doesn't comply with the spec
+                                Align.NONE -> Vector2.ZERO
+                                Align.X_MIN_Y_MIN -> Vector2.ZERO
+                                Align.X_MID_Y_MIN -> Vector2(cx / 2, 0.0)
+                                Align.X_MAX_Y_MIN -> Vector2(cx, 0.0)
+                                Align.X_MIN_Y_MID -> Vector2(0.0, cy / 2)
+                                Align.X_MID_Y_MID -> Vector2(cx / 2, cy / 2)
+                                Align.X_MAX_Y_MID -> Vector2(cx, cy / 2)
+                                Align.X_MIN_Y_MAX -> Vector2(0.0, cy)
+                                Align.X_MID_Y_MAX -> Vector2(cx / 2, cy)
+                                Align.X_MAX_Y_MAX -> Vector2(cx, cy)
+                            }
+                            it + d
+                        }
 
-                buildTransform {
-                    translate(translate)
-                    scale(scale.x, scale.y, 1.0)
+                        buildTransform {
+                            translate(translate)
+                            scale(scale.x, scale.y, 1.0)
+                        }
+                    }
                 }
-            }
-            else -> {
-                Matrix44.IDENTITY
             }
         }
     }
@@ -577,9 +396,9 @@ fun CompositionNode.visitAll(visitor: (CompositionNode.() -> Unit)) {
  * UserData delegate
  */
 class UserData<T : Any>(
-        val name: String, val initial: T
+    val name: String, val initial: T
 ) {
-    @Suppress("USELESS_CAST", "UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST")
     operator fun getValue(node: CompositionNode, property: KProperty<*>): T {
         val value: T? = node.userData[name] as? T
         return value ?: initial

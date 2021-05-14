@@ -45,17 +45,14 @@ fun parseSVG(svgString: String): Composition {
 
 // internal class SVGImage(val url: String, val x: Double?, val y: Double?, val width: Double?, val height: Double?) : SVGElement()
 
-internal class SVGDocument(private val root: SVGElement, val namespaces: Map<String, String>) {
+internal class SVGDocument(private val root: SVGSVGElement, val namespaces: Map<String, String>) {
     fun composition(): Composition = Composition(
         convertElement(root),
-        (root as? SVGSVGElement)?.bounds ?: defaultCompositionDimensions
+        root.bounds
 
     ).apply {
         namespaces.putAll(this@SVGDocument.namespaces)
-        if (this@SVGDocument.root is SVGSVGElement) {
-            this.viewBox = this@SVGDocument.root.viewBox
-            this.preserveAspectRatio = this@SVGDocument.root.preserveAspectRatio
-        }
+        this.documentStyle = this@SVGDocument.root.documentStyle
     }
 
     private fun convertElement(svgElem: SVGElement): CompositionNode = when (svgElem) {
@@ -65,19 +62,12 @@ internal class SVGDocument(private val root: SVGElement, val namespaces: Map<Str
         }
         is SVGPath -> {
             ShapeNode(svgElem.shape()).apply {
-                fill = svgElem.fill
-                stroke = svgElem.stroke
-                strokeWeight = svgElem.strokeWeight
-                lineJoin = svgElem.lineJoin
-                miterlimit = svgElem.miterlimit
-                strokeOpacity = svgElem.strokeOpacity
-                fillOpacity = svgElem.fillOpacity
-                opacity = svgElem.opacity
+                style = svgElem.style
                 this.id = svgElem.id
             }
         }
     }.apply {
-        transform = svgElem.transform
+        style::transform `=` svgElem.style.transform.value
         // attributes.putAll(svgElem.attributes)
     }
 }

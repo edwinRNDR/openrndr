@@ -81,7 +81,7 @@ internal object Attr {
 }
 
 /**
- * Property key constants
+ * org.openrndr.shape.Property key constants
  * These can also be defined in a style sheet/attribute
  */
 internal object Prop {

@@ -12,6 +12,7 @@ import org.openrndr.math.Vector2
 import org.openrndr.math.Vector3
 import org.openrndr.math.YPolarity
 import org.openrndr.math.transforms.*
+import java.awt.*
 import java.util.*
 
 enum class ClipOp {
@@ -51,7 +52,8 @@ private data class CompositionDrawStyle(
     var transformMode: TransformMode = TransformMode.APPLY,
     var lineCap: LineCap = LineCap.BUTT,
     var lineJoin: LineJoin = LineJoin.MITER,
-    var miterlimit: Double = 4.0
+    var miterlimit: Double = 4.0,
+    var visibility: Visibility = Visibility.Visible
 )
 
 data class ShapeNodeIntersection(val node: ShapeNode, val intersection: ContourIntersection)
@@ -117,9 +119,25 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
         get() = drawStyle.strokeWeight
         set(value) = run { drawStyle.strokeWeight = value }
 
+    var miterlimit
+        get() = drawStyle.miterlimit
+        set(value) = run { drawStyle.miterlimit = value }
+
+    var lineCap
+        get() = drawStyle.lineCap
+        set(value) = run { drawStyle.lineCap = value }
+
+    var lineJoin
+        get() = drawStyle.lineJoin
+        set(value) = run { drawStyle.lineJoin = value }
+
     var opacity
         get() = drawStyle.opacity
         set(value) = run { drawStyle.opacity = value }
+
+    var visibility
+        get() = drawStyle.visibility
+        set(value) = run { drawStyle.visibility = value }
 
     var clipMode
         get() = drawStyle.clipMode
@@ -338,15 +356,14 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
             ClipOp.DISABLED, ClipOp.REVERSE_DIFFERENCE -> {
                 val shapeNode = ShapeNode(postShape)
 
-                val shapeTransform: Matrix44
-                when (transformMode) {
+                val shapeTransform: Matrix44 = when (transformMode) {
                     TransformMode.KEEP -> {
-                        shapeNode.transform = model
-                        shapeTransform = Matrix44.IDENTITY
+                        shapeNode.style::transform `=` model
+                        Matrix44.IDENTITY
                     }
                     TransformMode.APPLY -> {
-                        shapeNode.transform = Matrix44.IDENTITY
-                        shapeTransform = model
+                        shapeNode.style::transform `=` Matrix44.IDENTITY
+                        model
                     }
                 }
                 shapeNode.shape = when (clipMode.op) {
@@ -366,9 +383,15 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
                     }
                     else -> error("unreachable")
                 }
-                shapeNode.fill = Color(fill)
-                shapeNode.stroke = Color(stroke)
-                shapeNode.strokeWeight = StrokeWeight(strokeWeight)
+                shapeNode.style::stroke `=` stroke
+                shapeNode.style::strokeOpacity `=` strokeOpacity
+                shapeNode.style::strokeWeight `=` strokeWeight
+                shapeNode.style::miterlimit `=` miterlimit
+                shapeNode.style::lineCap `=` lineCap
+                shapeNode.style::lineJoin `=` lineJoin
+                shapeNode.style::fill `=` fill
+                shapeNode.style::fillOpacity `=` fillOpacity
+
                 if (insert) {
                     cursor.children.add(shapeNode)
                     shapeNode.parent = cursor
@@ -511,9 +534,13 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
             insert: Boolean = true
     ): TextNode {
         val g = GroupNode()
-        g.transform = transform { translate(position.xy0) }
+        g.style.transform = Transform.Matrix(transform { translate(position.xy0) })
         val textNode = TextNode(text, null).apply {
-            this.fill = Color(this@CompositionDrawer.fill)
+            this.style.fill = when (val f = this@CompositionDrawer.fill) {
+                is ColorRGBa -> Paint.RGB(f)
+                else -> Paint.None
+            }
+
         }
         g.children.add(textNode)
         if (insert) {
@@ -549,7 +576,7 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
             insert: Boolean = true
     ): ImageNode {
         val node = ImageNode(image, x, y, width = image.width.toDouble(), height = image.height.toDouble())
-        node.transform = this.model
+        node.style.transform = Transform.Matrix(this.model)
         if (insert) {
             cursor.children.add(node)
         }
@@ -562,26 +589,63 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
         fun node(compositionNode: CompositionNode) {
             pushModel()
             pushStyle()
-            model *= compositionNode.transform
+
+            model *= compositionNode.style.transform.value
 
             // (skip compositionNode.shadeStyle here)
-
+            // TODO: Handle Style.display
             when (compositionNode) {
                 is ShapeNode -> {
-                    compositionNode.fill.let {
-                        if (it is Color) {
-                            fill = it.color
+                    val cs = compositionNode.computedStyle
+
+                    cs.stroke.let {
+                        stroke = when (it) {
+                            is Paint.RGB -> it.color
+                            Paint.None -> null
+                            Paint.CurrentColor -> null
                         }
                     }
-                    compositionNode.stroke.let {
-                        if (it is Color) {
-                            stroke = it.color
+                    cs.strokeOpacity.let {
+                        strokeOpacity = when (it) {
+                            is Numeric.Rational -> it.value
                         }
                     }
-                    compositionNode.strokeWeight.let {
-                        if (it is StrokeWeight) {
-                            strokeWeight = it.weight
+                    cs.strokeWeight.let {
+                        strokeWeight = when (it) {
+                            is Length.Pixels -> it.value
+                            is Length.Percent -> composition.normalizedDiagonalLength() * it.value / 100.0
                         }
+                    }
+                    cs.miterlimit.let {
+                        miterlimit = when (it) {
+                            is Numeric.Rational -> it.value
+                        }
+                    }
+                    cs.lineCap.let {
+                        lineCap = it.value
+                    }
+                    cs.lineJoin.let {
+                        lineJoin = it.value
+                    }
+                    cs.fill.let {
+                        fill = when (it) {
+                            is Paint.RGB -> it.color
+                            is Paint.None -> null
+                            is Paint.CurrentColor -> null
+                        }
+                    }
+                    cs.fillOpacity.let {
+                        fillOpacity = when (it) {
+                            is Numeric.Rational -> it.value
+                        }
+                    }
+                    cs.opacity.let {
+                        opacity = when (it) {
+                            is Numeric.Rational -> it.value
+                        }
+                    }
+                    cs.visibility.let {
+                        visibility = it
                     }
                     shape(compositionNode.shape)
                 }
@@ -604,13 +668,13 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
     }
 
     fun CompositionNode.translate(x: Double, y: Double, z: Double = 0.0) {
-        transform = transform.transform {
+        style::transform `=` style.transform.value.transform {
             translate(x, y, z)
         }
     }
 
     fun CompositionNode.rotate(angleInDegrees: Double, pivot: Vector2 = Vector2.ZERO) {
-        transform = transform.transform {
+        style::transform `=` style.transform.value.transform {
             translate(pivot.xy0)
             rotate(Vector3.UNIT_Z, angleInDegrees)
             translate(-pivot.xy0)
@@ -618,14 +682,16 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
     }
 
     fun CompositionNode.scale(scale: Double, pivot: Vector2 = Vector2.ZERO) {
-        transform = transform.transform {
+        style::transform `=` style.transform.value.transform {
             translate(pivot.xy0)
             scale(scale, scale, scale)
             translate(-pivot.xy0)
         }
     }
 
-    fun CompositionNode.transform(builder: TransformBuilder.() -> Unit) = this::transform.transform(builder)
+    fun CompositionNode.transform(builder: TransformBuilder.() -> Unit) {
+        return this.transform(builder)
+    }
 
     /**
      * Copy node and insert copy at [cursor]
@@ -654,10 +720,7 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
                     groupNode
                 }
             }
-            copy.transform = node.transform
-            copy.fill = node.fill
-            copy.stroke = node.stroke
-            copy.strokeWeight = node.strokeWeight
+            copy.style = node.style
             return copy
         }
 
@@ -672,7 +735,7 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
 
 // Derives Composition dimensions from current Drawer
 fun Program.drawComposition(
-        documentBounds: CompositionDimensions = CompositionDimensions(0.0, 0.0, this.drawer.width.toDouble(), this.drawer.height.toDouble()),
+        documentBounds: CompositionDimensions = CompositionDimensions(0.0.pixels, 0.0.pixels, this.drawer.width.toDouble().pixels, this.drawer.height.toDouble().pixels),
         composition: Composition? = null,
         cursor: GroupNode? = composition?.root as? GroupNode,
         drawFunction: CompositionDrawer.() -> Unit
