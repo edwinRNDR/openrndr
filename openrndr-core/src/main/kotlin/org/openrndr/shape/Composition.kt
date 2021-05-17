@@ -203,8 +203,8 @@ open class GroupNode(open val children: MutableList<CompositionNode> = mutableLi
 }
 
 data class CompositionDimensions(val x: Length, val y: Length, val width: Length, val height: Length) {
-    val position = Vector2((x as Length.Pixels).value, (y as Length.Pixels).value)
-    val dimensions = Vector2((width as Length.Pixels).value, (height as Length.Pixels).value)
+    val position = Vector2((x as Length.Pixels).units, (y as Length.Pixels).units)
+    val dimensions = Vector2((width as Length.Pixels).units, (height as Length.Pixels).units)
 
     override fun toString(): String = "$x $y $width $height"
 }

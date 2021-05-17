@@ -1092,8 +1092,8 @@ class Drawer(val driver: Driver) {
                     }
                     compositionNode.style.strokeWeight.let {
                         strokeWeight = when (it) {
-                            is Length.Pixels -> it.value
-                            is Length.Percent -> composition.normalizedDiagonalLength() * it.value / 100.0
+                            is Length.Pixels -> it.units
+                            is Length.Percent -> composition.normalizedDiagonalLength() * it.units / 100.0
                         }
                     }
                     compositionNode.style.miterlimit.let {
@@ -1102,10 +1102,10 @@ class Drawer(val driver: Driver) {
                         }
                     }
                     compositionNode.style.lineCap.let {
-                        lineCap = it.value
+                        lineCap = it.cap
                     }
                     compositionNode.style.lineJoin.let {
-                        lineJoin = it.value
+                        lineJoin = it.join
                     }
                     compositionNode.style.fill.let {
                         fill = when (it) {

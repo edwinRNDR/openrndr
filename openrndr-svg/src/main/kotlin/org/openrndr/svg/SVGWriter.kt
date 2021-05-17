@@ -35,15 +35,25 @@ private val CompositionNode.svgAttributes: String
         }.joinToString(" ")
     }
 
-private fun Styleable.serialize(): String {
+private fun Styleable.serialize(parentStyleable: Styleable? = null): String {
     val sb = StringBuilder()
 
-    this.properties.filter {
+    val filtered = this.properties.filter {
         it.key != AttributeOrProperty.SHADESTYLE
-    }.forEach { (t, u) ->
-        if (u.toString().isNotEmpty()) {
-            sb.append("$t=\"${u.toString()}\" ")
+    }
+    // Inheritance can't be checked without a parentStyleable
+    when (parentStyleable) {
+        null -> filtered.forEach { (t, u) ->
+            if (u.toString().isNotEmpty()) {
+                sb.append("$t=\"${u.toString()}\" ")
+            }
         }
+        else -> filtered.forEach { (t, u) ->
+            if (u.toString().isNotEmpty() && !this.isInherited(parentStyleable, t)) {
+                sb.append("$t=\"${u.toString()}\" ")
+            }
+        }
+
     }
 
     return sb.trim().toString()
@@ -74,7 +84,7 @@ fun writeSVG(
     process(composition.root) { stage ->
         if (stage == VisitStage.PRE) {
 
-            val styleSerialized = this.style.serialize()
+            val styleSerialized = this.style.serialize(this.parent?.style)
 
             when (this) {
                 is GroupNode -> {
@@ -117,10 +127,8 @@ fun writeSVG(
                 }
             }
         } else {
-            when (this) {
-                is GroupNode -> {
-                    sb.append("</g>\n")
-                }
+            if (this is GroupNode) {
+                sb.append("</g>\n")
             }
         }
     }

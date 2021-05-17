@@ -15,9 +15,6 @@ enum class Inheritance {
 }
 
 sealed interface AttributeOrPropertyValue {
-    object Inherit : AttributeOrPropertyValue {
-        override fun toString() = ""
-    }
     override fun toString(): String
 }
 
@@ -48,7 +45,9 @@ sealed interface Shade : AttributeOrPropertyValue {
 }
 
 sealed interface Length : AttributeOrPropertyValue {
-    class Pixels(val value: Double) : Length {
+    val units: Double
+
+    class Pixels(override val units: Double) : Length {
         companion object {
             fun fromInches(value: Double) = Pixels(value * 96.0)
             fun fromPicas(value: Double) = Pixels(value * 16.0)
@@ -58,12 +57,12 @@ sealed interface Length : AttributeOrPropertyValue {
             fun fromQuarterMillimeters(value: Double) = Pixels(value * (96.0 / 101.6))
         }
 
-        override fun toString(): String = "$value"
+        override fun toString(): String = "$units"
     }
 
-    class Percent(val value: Double) : Length {
+    class Percent(override val units: Double) : Length {
         override fun toString(): String {
-            return "${value}%"
+            return "${units}%"
         }
     }
 
@@ -111,71 +110,81 @@ sealed interface Transform : AttributeOrPropertyValue {
 }
 
 sealed interface Visibility : AttributeOrPropertyValue {
+    val visible: Boolean
+
     object Visible : Visibility {
+        override val visible = true
         override fun toString() = "visible"
     }
 
     object Hidden : Visibility {
+        override val visible = false
         override fun toString() = "hidden"
     }
 
+    // This exists because the spec specifies so,
+    // it is effectively Hidden.
     object Collapse : Visibility {
+        override val visible = false
         override fun toString() = "collapse"
     }
 }
 
 sealed interface Display : AttributeOrPropertyValue {
+    val visible: Boolean
+
     object Inline : Display {
+        override val visible = true
         override fun toString() = "inline"
     }
 
     object Block : Display {
+        override val visible = true
         override fun toString() = "block"
     }
 
     object None : Display {
+        override val visible = false
         override fun toString() = "none"
     }
 }
 
 sealed interface LineCap : AttributeOrPropertyValue {
-    val value: org.openrndr.draw.LineCap
-
+    val cap: org.openrndr.draw.LineCap
 
     object Round : LineCap {
-        override val value = org.openrndr.draw.LineCap.ROUND
+        override val cap = org.openrndr.draw.LineCap.ROUND
         override fun toString() = "round"
     }
 
     object Butt : LineCap {
-        override val value = org.openrndr.draw.LineCap.BUTT
+        override val cap = org.openrndr.draw.LineCap.BUTT
         override fun toString() = "butt"
     }
 
     object Square : LineCap {
-        override val value = org.openrndr.draw.LineCap.SQUARE
+        override val cap = org.openrndr.draw.LineCap.SQUARE
         override fun toString() = "square"
     }
 }
 
 sealed interface LineJoin : AttributeOrPropertyValue {
-    val value: org.openrndr.draw.LineJoin
+    val join: org.openrndr.draw.LineJoin
 
     object Miter : LineJoin {
-        override val value = org.openrndr.draw.LineJoin.MITER
+        override val join = org.openrndr.draw.LineJoin.MITER
         override fun toString() = "miter"
     }
 
     object Bevel : LineJoin {
-        override val value = org.openrndr.draw.LineJoin.BEVEL
+        override val join = org.openrndr.draw.LineJoin.BEVEL
         override fun toString() = "bevel"
     }
 
     object Round : LineJoin {
-        override val value = org.openrndr.draw.LineJoin.ROUND
+        override val join = org.openrndr.draw.LineJoin.ROUND
         override fun toString() = "round"
     }
-
 }
 
 enum class Align {
@@ -282,17 +291,32 @@ sealed class Styleable {
     infix fun inherit(from: Style): Style {
         return Style().also {
             from.properties.forEach { (name, value) ->
-                when (PropertyBehaviors.behaviors[name]?.inherit) {
-                    INHERIT -> it.properties[name] = value
+                if (PropertyBehaviors.behaviors[name]?.inherit == INHERIT) {
+                    it.properties[name] = value
                 }
             }
             it.properties.putAll(properties)
         }
     }
+
+    // Because AttributeOrPropertyValue has a toString override,
+    // we can abuse it for equality checks.
+    fun isInherited(from: Styleable, attribute: AttributeOrProperty): Boolean =
+        when (this.properties[attribute].toString()) {
+            from.properties[attribute].toString() -> true
+            PropertyBehaviors.behaviors[attribute]?.initial.toString() -> true
+            else -> false
+        }
 }
 
 class DocumentStyle : Styleable()
 class Style : Styleable()
+
+var DocumentStyle.viewBox by PropertyDelegate<ViewBox>(VIEW_BOX, RESET, ViewBox.Initial)
+var DocumentStyle.preserveAspectRatio by PropertyDelegate<AspectRatio>(
+    PRESERVE_ASPECT_RATIO,
+    RESET, AspectRatio.DEFAULT
+)
 
 var Style.stroke by PropertyDelegate<Paint>(STROKE, INHERIT, Paint.None)
 var Style.strokeOpacity by PropertyDelegate<Numeric>(STROKE_OPACITY, INHERIT, Numeric.Rational(1.0))
@@ -317,16 +341,10 @@ var Style.y by PropertyDelegate<Length>(Y, RESET, 0.0.pixels)
 var Style.width by PropertyDelegate<Length>(WIDTH, RESET, 768.0.pixels)
 var Style.height by PropertyDelegate<Length>(HEIGHT, RESET, 576.0.pixels)
 
-var DocumentStyle.viewBox by PropertyDelegate<ViewBox>(VIEW_BOX, RESET, ViewBox.Initial)
-var DocumentStyle.preserveAspectRatio by PropertyDelegate<AspectRatio>(
-    PRESERVE_ASPECT_RATIO,
-    RESET, AspectRatio.DEFAULT
-)
-
 var Style.shadeStyle by PropertyDelegate<Shade>(SHADESTYLE, INHERIT, Shade.Value(ShadeStyle()))
 
-// @formatter:off
 enum class AttributeOrProperty {
+    // @formatter:off
     // Attributes
     BASE_PROFILE { override fun toString() = "baseProfile" },
     CLASS { override fun toString() = "class" },
@@ -395,5 +413,5 @@ enum class AttributeOrProperty {
     SHADESTYLE { override fun toString() = "" };
 
     abstract override fun toString(): String
+    // @formatter:on
 }
-// @formatter:on
