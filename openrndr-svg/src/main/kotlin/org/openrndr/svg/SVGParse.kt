@@ -1,15 +1,11 @@
 package org.openrndr.svg
 
 import org.jsoup.nodes.*
-import org.jsoup.nodes.Element
 import org.openrndr.color.*
 import org.openrndr.math.*
 import org.openrndr.math.transforms.*
 import org.openrndr.shape.*
-import org.openrndr.shape.Paint
-import org.openrndr.shape.Rectangle
 import java.util.regex.*
-import javax.swing.text.*
 import kotlin.math.*
 import kotlin.text.MatchResult
 
@@ -22,44 +18,50 @@ internal sealed interface PropertyRegex {
         const val commaWsp = "(?:\\s*,?\\s+)"
         const val align = "(?<align>[xy](?:Min|Mid|Max)[XY](?:Min|Mid|Max))*"
         const val meetOrSlice = "(?<meetOrSlice>meet|slice)*"
-        const val unitIdentifier = "in|pc|pt|px|cm|mm|q"
+        const val unitIdentifier = "in|pc|pt|px|cm|mm|Q"
+        val opts = RegexOption.IGNORE_CASE
     }
 
     object Any : PropertyRegex {
-        override val regex = Regex(".+")
+        override val regex = ".+".toRegex()
     }
 
     object Number : PropertyRegex {
-        override val regex = Regex("[+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?:[eE][+-]?\\d+)?")
+        override val regex = "[+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?:[eE][+-]?\\d+)?".toRegex()
     }
 
     object NumberList : PropertyRegex {
-        override val regex = Regex("(?:${Number.regex}$commaWsp)*${Number.regex}")
+        override val regex = "(?:${Number.regex}$commaWsp)*${Number.regex}".toRegex()
     }
 
     object Length : PropertyRegex {
-        override val regex = Regex("(?<number>${Number.regex})(?<ident>$unitIdentifier)?")
+        override val regex = "(?<number>${Number.regex})(?<ident>$unitIdentifier)?".toRegex(opts)
     }
 
     object Percentage : PropertyRegex {
-        override val regex = Regex("${Number.regex}%")
+        override val regex = "${Number.regex}%".toRegex()
     }
 
     object LengthOrPercentage : PropertyRegex {
-        override val regex = Regex("${Length.regex}|${Percentage.regex}")
+        override val regex = "${Length.regex}|${Percentage.regex}".toRegex(opts)
     }
 
     object PreserveAspectRatio : PropertyRegex {
-        override val regex = Regex("$wsp${align}$wsp${meetOrSlice}$wsp")
+        override val regex = "$wsp${align}$wsp${meetOrSlice}$wsp".toRegex(opts)
+    }
+
+    object RGBHex : PropertyRegex {
+        override val regex = "#?([0-9a-f]{3,6})".toRegex(opts)
     }
 
     object RGBFunctional : PropertyRegex {
         // Matches rgb(255, 255, 255)
-        private val rgb8BitRegex = Regex("(${Number.regex})${commaWsp}(${Number.regex})${commaWsp}(${Number.regex})")
-        // Matches rgb(100%, 100%, 100%)
-        private val rgbPercentageRegex = Regex("(${Number.regex})%${commaWsp}(${Number.regex})%${commaWsp}(${Number.regex})%")
+        private val rgb8BitRegex = "(${Number.regex})${commaWsp}(${Number.regex})${commaWsp}(${Number.regex})"
 
-        override val regex = Regex("${wsp}rgb\\(\\s*(?>$rgb8BitRegex\\s*|\\s*$rgbPercentageRegex)\\s*\\)$wsp")
+        // Matches rgb(100%, 100%, 100%)
+        private val rgbPercentageRegex = "(${Number.regex})%${commaWsp}(${Number.regex})%${commaWsp}(${Number.regex})%"
+
+        override val regex = "${wsp}rgb\\(\\s*(?>$rgb8BitRegex\\s*|\\s*$rgbPercentageRegex)\\s*\\)$wsp".toRegex(opts)
     }
 }
 
@@ -204,7 +206,7 @@ internal object SVGParse {
             }
         }
 
-        // TOOD: Number regex accepts `-` as a number lol
+        // TODO: Number regex accepts `-` as a number lol
         val p = Pattern.compile("(matrix|translate|scale|rotate|skewX|skewY)\\([\\d\\.,\\-\\s]+\\)")
         val m = p.matcher(transformValue)
 
@@ -287,7 +289,9 @@ internal object SVGParse {
 
     private fun pointsToCommands(pointsValues: String): List<Command> {
         val commands = mutableListOf<Command>()
-        val tokens = pointsValues.split("[ ,\n]+".toRegex()).map { it.trim() }.filter { it.isNotEmpty() }
+        val tokens = pointsValues.split(PropertyRegex.commaWsp.toRegex())
+            .map(String::trim)
+            .filter(String::isNotEmpty)
         val points = (0 until tokens.size / 2).map { Vector2(tokens[it * 2].toDouble(), tokens[it * 2 + 1].toDouble()) }
         commands.add(Command("M", points[0].x, points[0].y))
         (1 until points.size).mapTo(commands) { Command("L", points[it].x, points[it].y) }
@@ -296,20 +300,36 @@ internal object SVGParse {
     }
 
     fun polygon(element: Element): List<Command> {
-        // TODO: Add more reliable check if it's a valid collection of points
         val pointsValues = element.attr(Attr.POINTS)
 
-        val commands = pointsToCommands(pointsValues) as MutableList
+        PropertyRegex.NumberList.regex.matchEntire(pointsValues) ?: return emptyList()
+        val list = pointsValues.split(PropertyRegex.commaWsp.toRegex()).let {
+            if (it.size % 2 != 0) {
+                it.dropLast(1)
+            } else {
+                it
+            }
+        }
+
+        val commands = pointsToCommands(list.reduce(String::plus)) as MutableList
         commands.add(Command("Z"))
 
         return commands
     }
 
     fun polyline(element: Element): List<Command> {
-        // TODO: Add more reliable check if it's a valid collection of points
         val pointsValues = element.attr(Attr.POINTS)
 
-        return pointsToCommands(pointsValues) as MutableList
+        PropertyRegex.NumberList.regex.matchEntire(pointsValues) ?: return emptyList()
+        val list = pointsValues.split(PropertyRegex.commaWsp.toRegex()).let {
+            if (it.size % 2 != 0) {
+                it.dropLast(1)
+            } else {
+                it
+            }
+        }
+
+        return pointsToCommands(list.reduce(String::plus)) as MutableList
     }
 
     private fun ellipsePath(x: Double, y: Double, width: Double, height: Double): List<Command> {
@@ -337,36 +357,41 @@ internal object SVGParse {
     }
 
     fun circle(element: Element): List<Command> {
-        val cxValue = element.attr(Attr.CX)
-        val cyValue = element.attr(Attr.CY)
-        val rValue = element.attr(Attr.R)
+        val cx = element.attr(Attr.CX).let {
+            if (it.isEmpty()) 0.0 else it.toDoubleOrNull()
+        } ?: return emptyList()
+        val cy = element.attr(Attr.CY).let {
+            if (it.isEmpty()) 0.0 else it.toDoubleOrNull()
+        } ?: return emptyList()
+        val r = element.attr(Attr.R).let {
+            if (it.isEmpty()) 0.0 else it.toDoubleOrNull()?.times(2.0)
+        } ?: return emptyList()
 
-        val x = if (cxValue.isEmpty()) 0.0 else cxValue.toDouble()
-        val y = if (cyValue.isEmpty()) 0.0 else cyValue.toDouble()
-        val r = if (rValue.isEmpty()) 0.0 else rValue.toDouble() * 2.0
-
-        return ellipsePath(x, y, r, r)
+        return ellipsePath(cx, cy, r, r)
     }
 
     fun ellipse(element: Element): List<Command> {
-        val cxValue = element.attr(Attr.CX)
-        val cyValue = element.attr(Attr.CY)
-        val rxValue = element.attr(Attr.RX)
-        val ryValue = element.attr(Attr.RY)
+        val cx = element.attr(Attr.CX).let {
+            if (it.isEmpty()) 0.0 else it.toDoubleOrNull()
+        } ?: return emptyList()
+        val cy = element.attr(Attr.CY).let {
+            if (it.isEmpty()) 0.0 else it.toDoubleOrNull()
+        } ?: return emptyList()
+        val rx = element.attr(Attr.RX).let {
+            if (it.isEmpty()) 0.0 else it.toDoubleOrNull()?.times(2.0)
+        } ?: return emptyList()
+        val ry = element.attr(Attr.RY).let {
+            if (it.isEmpty()) 0.0 else it.toDoubleOrNull()?.times(2.0)
+        } ?: return emptyList()
 
-        val x = if (cxValue.isEmpty()) 0.0 else cxValue.toDouble()
-        val y = if (cyValue.isEmpty()) 0.0 else cyValue.toDouble()
-        val width = if (rxValue.isEmpty()) 0.0 else rxValue.toDouble() * 2.0
-        val height = if (ryValue.isEmpty()) 0.0 else ryValue.toDouble() * 2.0
-
-        return ellipsePath(x, y, width, height)
+        return ellipsePath(cx, cy, rx, ry)
     }
 
     fun rectangle(element: Element): List<Command> {
-        val x = element.attr(Attr.X).let { if (it.isEmpty()) 0.0 else it.toDouble() }
-        val y = element.attr(Attr.Y).let { if (it.isEmpty()) 0.0 else it.toDouble() }
-        val width = element.attr(Attr.WIDTH).toDouble()
-        val height = element.attr(Attr.HEIGHT).toDouble()
+        val x = element.attr(Attr.X).let { if (it.isEmpty()) 0.0 else it.toDoubleOrNull() } ?: return emptyList()
+        val y = element.attr(Attr.Y).let { if (it.isEmpty()) 0.0 else it.toDoubleOrNull() } ?: return emptyList()
+        val width = element.attr(Attr.WIDTH).toDoubleOrNull() ?: return emptyList()
+        val height = element.attr(Attr.HEIGHT).toDoubleOrNull() ?: return emptyList()
 
         return listOf(
             Command("M", x, y),
@@ -378,11 +403,10 @@ internal object SVGParse {
     }
 
     fun line(element: Element): List<Command> {
-        // TODO! Error handling?
-        val x1 = element.attr(Attr.X1).toDouble()
-        val x2 = element.attr(Attr.X2).toDouble()
-        val y1 = element.attr(Attr.Y1).toDouble()
-        val y2 = element.attr(Attr.Y2).toDouble()
+        val x1 = element.attr(Attr.X1).toDoubleOrNull() ?: return emptyList()
+        val x2 = element.attr(Attr.X2).toDoubleOrNull() ?: return emptyList()
+        val y1 = element.attr(Attr.Y1).toDoubleOrNull() ?: return emptyList()
+        val y2 = element.attr(Attr.Y2).toDoubleOrNull() ?: return emptyList()
 
         return listOf(
             Command("M", x1, y1),
@@ -397,7 +421,7 @@ internal object SVGParse {
             return emptyList()
         }
 
-        val rawCommands = pathValue.split("(?=[MmZzLlHhVvCcSsQqTtAa])".toRegex()).map { it.trim() }
+        val rawCommands = pathValue.split("(?=[MmZzLlHhVvCcSsQqTtAa])".toRegex()).map(String::trim)
         val numbers = Pattern.compile("[-+]?[0-9]*[.]?[0-9]+(?:[eE][-+]?[0-9]+)?")
         val commands = mutableListOf<Command>()
 
@@ -421,7 +445,7 @@ internal object SVGParse {
         return when {
             col.isEmpty() -> Paint.None
             col.startsWith("#") -> {
-                val normalizedColor = normalizeColorHex(col).replace("#", "")
+                val normalizedColor = normalizeColorHex(col) ?: return Paint.None
                 val v = normalizedColor.toLong(radix = 16)
                 val vi = v.toInt()
                 val r = vi shr 16 and 0xff
@@ -435,20 +459,17 @@ internal object SVGParse {
         }
     }
 
-    private fun normalizeColorHex(colorHex: String): String {
-        val colorHexRegex = "#?([0-9a-f]{3,6})".toRegex(RegexOption.IGNORE_CASE)
-
-        val matchResult = colorHexRegex.matchEntire(colorHex)
-            ?: error("The provided colorHex '$colorHex' is not a valid color hex for the SVG spec")
+    private fun normalizeColorHex(colorHex: String): String? {
+        val matchResult = PropertyRegex.RGBHex.regex.matchEntire(colorHex) ?: return null
 
         val hexValue = matchResult.groups[1]!!.value.lowercase()
         val normalizedArgb = when (hexValue.length) {
             3 -> expandToTwoDigitsPerComponent("f$hexValue")
             6 -> hexValue
-            else -> error("The provided colorHex '$colorHex' is not in a supported format")
+            else -> return null
         }
 
-        return "#$normalizedArgb"
+        return normalizedArgb
     }
 
     /**
@@ -471,7 +492,7 @@ internal object SVGParse {
         // Drop full match, filter out empty matches, map it, deconstruct it
         val (r, g, b) = result.groupValues
             .drop(1)
-            .filter { it.isNotBlank() }
+            .filter(String::isNotBlank)
             .map { it.toDouble().coerceIn(0.0..divisor) / divisor }
         return Paint.RGB(ColorRGBa(r, g, b))
     }
@@ -479,5 +500,5 @@ internal object SVGParse {
     private fun expandToTwoDigitsPerComponent(hexValue: String) =
         hexValue.asSequence()
             .map { "$it$it" }
-            .reduce { accumulatedHex, component -> accumulatedHex + component }
+            .reduce(String::plus)
 }

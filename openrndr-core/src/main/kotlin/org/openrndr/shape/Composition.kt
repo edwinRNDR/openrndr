@@ -41,7 +41,6 @@ sealed class CompositionNode {
      */
     abstract val bounds: Rectangle
 
-    // TODO! This is no good
     val effectiveTransform: Matrix44
         get() = style.transform.value * (parent?.effectiveTransform ?: Matrix44.IDENTITY)
 }
