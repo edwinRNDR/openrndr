@@ -41,8 +41,16 @@ sealed class CompositionNode {
      */
     abstract val bounds: Rectangle
 
-    val effectiveTransform: Matrix44
-        get() = style.transform.value * (parent?.effectiveTransform ?: Matrix44.IDENTITY)
+    /**
+     * Calculates the total transformation of the current node.
+     * The result will be equivalent with the
+     * node's own transformation if it has no parent.
+     */
+    open val effectiveTransform: Matrix44
+        get() = when (val p = parent) {
+            is CompositionNode -> style.transform.value * p.effectiveTransform
+            else -> style.transform.value
+        }
 }
 
 infix fun KMutableProperty0<Paint>.`=`(color: ColorRGBa?) = this.set(when (color) {
@@ -198,7 +206,6 @@ open class GroupNode(open val children: MutableList<CompositionNode> = mutableLi
     override fun hashCode(): Int {
         return children.hashCode()
     }
-
 }
 
 data class CompositionDimensions(val x: Length, val y: Length, val width: Length, val height: Length) {
@@ -206,6 +213,24 @@ data class CompositionDimensions(val x: Length, val y: Length, val width: Length
     val dimensions = Vector2((width as Length.Pixels).units, (height as Length.Pixels).units)
 
     override fun toString(): String = "$x $y $width $height"
+
+    // I'm not entirely sure why this is needed but
+    // but otherwise equality checks will never succeed
+    override fun equals(other: Any?): Boolean {
+        return other is CompositionDimensions
+            && x.units == other.x.units
+            && y.units == other.y.units
+            && width.units == other.width.units
+            && height.units == other.height.units
+    }
+
+    override fun hashCode(): Int {
+        var result = x.hashCode()
+        result = 31 * result + y.hashCode()
+        result = 31 * result + width.hashCode()
+        result = 31 * result + height.hashCode()
+        return result
+    }
 }
 
 val defaultCompositionDimensions = CompositionDimensions(0.0.pixels, 0.0.pixels, 768.0.pixels, 576.0.pixels)
@@ -251,14 +276,15 @@ class Composition(val root: CompositionNode, var bounds: CompositionDimensions =
 
     fun clear() = (root as? GroupNode)?.children?.clear()
 
+    // Swiped from the SVG spec for converting percentages to pixels within a Composition
     internal fun normalizedDiagonalLength(): Double =
-        sqrt((bounds.dimensions.x).pow(2) + (bounds.dimensions.y).pow(2)) / sqrt(2.0)
+        sqrt((bounds.dimensions.x).pow(2) + (bounds.dimensions.y).pow(2)) / 1.4142135623730951
 
     /**
      * Calculates effective viewport transformation using [viewBox] and [preserveAspectRatio].
      * As per [the SVG 2.0 spec](https://svgwg.org/svg2-draft/single-page.html#coords-ComputingAViewportsTransform)
      */
-    internal fun calculateViewportTransform(): Matrix44 {
+    fun calculateViewportTransform(): Matrix44 {
         return when (documentStyle.viewBox) {
             ViewBox.Initial -> Matrix44.IDENTITY
             ViewBox.None -> Matrix44.ZERO

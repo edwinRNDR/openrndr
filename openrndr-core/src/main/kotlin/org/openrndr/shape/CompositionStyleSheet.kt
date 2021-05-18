@@ -83,7 +83,9 @@ inline val Double.percent: Length.Percent
     get() = Length.Percent(this)
 
 sealed interface Numeric : AttributeOrPropertyValue {
-    class Rational(val value: Double) : Numeric {
+    val value: Double
+
+    class Rational(override val value: Double) : Numeric {
         override fun toString(): String = "$value"
     }
 }
