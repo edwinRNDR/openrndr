@@ -18,16 +18,16 @@ fun Composition.saveToFile(file: File) {
 fun Composition.toSVG() = writeSVG(this)
 
 private val CompositionNode.svgId: String
-    get() = if (id != null) {
-        "id=\"${id ?: error("id = null")}\""
-    } else {
-        ""
+    get() = when (val tempId = id) {
+        "" -> ""
+        null -> ""
+        else -> "id=\"$tempId\""
     }
 
 private val CompositionNode.svgAttributes: String
     get() {
         return attributes.map {
-            if (it.value != null) {
+            if (it.value != null && it.value != "") {
                 "${it.key}=\"${Entities.escape(it.value)}\""
             } else {
                 it.key
@@ -89,7 +89,7 @@ fun writeSVG(
             when (this) {
                 is GroupNode -> {
                     val attributes = listOf(svgId, styleSerialized, svgAttributes)
-                        .filter { a -> a.isNotBlank() }
+                        .filter(String::isNotEmpty)
                         .joinToString(" ")
                     sb.append("<g${" $attributes"}>\n")
                 }
@@ -102,7 +102,7 @@ fun writeSVG(
                         svgAttributes,
                         pathAttribute
                     )
-                        .filter { it.isNotBlank() }
+                        .filter(String::isNotEmpty)
                         .joinToString(" ")
 
                     sb.append("<path $attributes/>\n")
