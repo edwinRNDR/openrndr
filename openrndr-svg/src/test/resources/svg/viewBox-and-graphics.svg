@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" x="6px" y="7px" width="32px" height="32px" viewBox="8 0 16 16" preserveAspectRatio="xMinYMax slice">
+    <circle fill="rgb(75%, 14%, 33%)" cx="8" cy="8" r="8" transform="translate(16, -8)"/>
+    <ellipse fill="rgb(245, 231, 125)" cx="8" cy="8" rx="8" ry="4"
+             stroke-linecap="round"
+             stroke-linejoin="round"
+             stroke-miterlimit="50.0"
+             opacity="0.8"
+             stroke-opacity="0.5"
+             fill-opacity=".25"/>
+    <path/>
+</svg>
