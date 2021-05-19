@@ -20,7 +20,7 @@ internal sealed class SVGElement(element: Element?) {
             Prop.STROKE -> style.stroke = SVGParse.color(value)
             Prop.STROKE_OPACITY -> style.strokeOpacity = SVGParse.number(value)
             Prop.STROKE_WIDTH -> style.strokeWeight = SVGParse.length(value)
-            Prop.STROKE_MITERLIMIT -> style.miterlimit = SVGParse.number(value)
+            Prop.STROKE_MITERLIMIT -> style.miterLimit = SVGParse.number(value)
             Prop.STROKE_LINECAP -> style.lineCap = SVGParse.lineCap(value)
             Prop.STROKE_LINEJOIN -> style.lineJoin = SVGParse.lineJoin(value)
             Prop.FILL -> style.fill = SVGParse.color(value)

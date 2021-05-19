@@ -112,7 +112,7 @@ object TestSVGLoader : Spek({
         it("has correctly parsed various stroke properties") {
             shape1.style.lineCap.cap `should be equal to` LineCap.ROUND
             shape1.style.lineJoin.join `should be equal to` LineJoin.ROUND
-            shape1.style.miterlimit.value `should be equal to` 50.0
+            shape1.style.miterLimit.value `should be equal to` 50.0
         }
 
         it("has correctly parsed the opacity properties") {

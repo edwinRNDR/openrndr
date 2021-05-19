@@ -12,7 +12,6 @@ import org.openrndr.math.Vector2
 import org.openrndr.math.Vector3
 import org.openrndr.math.YPolarity
 import org.openrndr.math.transforms.*
-import java.awt.*
 import java.util.*
 
 enum class ClipOp {
@@ -386,7 +385,7 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
                 shapeNode.style::stroke `=` stroke
                 shapeNode.style::strokeOpacity `=` strokeOpacity
                 shapeNode.style::strokeWeight `=` strokeWeight
-                shapeNode.style::miterlimit `=` miterlimit
+                shapeNode.style::miterLimit `=` miterlimit
                 shapeNode.style::lineCap `=` lineCap
                 shapeNode.style::lineJoin `=` lineJoin
                 shapeNode.style::fill `=` fill
@@ -616,7 +615,7 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
                             is Length.Percent -> composition.normalizedDiagonalLength() * it.units / 100.0
                         }
                     }
-                    cs.miterlimit.let {
+                    cs.miterLimit.let {
                         miterlimit = when (it) {
                             is Numeric.Rational -> it.value
                         }

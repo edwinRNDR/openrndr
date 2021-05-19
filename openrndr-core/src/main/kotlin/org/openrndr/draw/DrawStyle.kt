@@ -4,7 +4,7 @@ import mu.KotlinLogging
 import org.openrndr.color.ColorRGBa
 import org.openrndr.internal.Driver
 import org.openrndr.math.Matrix55
-import org.openrndr.shape.Rectangle
+import org.openrndr.shape.*
 
 private val logger = KotlinLogging.logger {}
 

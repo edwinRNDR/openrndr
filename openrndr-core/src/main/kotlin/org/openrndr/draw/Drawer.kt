@@ -467,7 +467,12 @@ class Drawer(val driver: Driver) {
         }
         get() = drawStyle.lineJoin
 
-    var miterlimit: Double
+    /**
+     * When two line segments meet at a sharp angle and miter joins have been specified for [lineJoin],
+     * it is possible for the miter to extend far beyond the thickness of the line stroking the path.
+     * The miterlimit imposes a limit on the ratio of the miter length to the [strokeWeight].
+     */
+    var miterLimit: Double
         set(value) {
             drawStyle.miterLimit = value
         }
@@ -1096,8 +1101,8 @@ class Drawer(val driver: Driver) {
                             is Length.Percent -> composition.normalizedDiagonalLength() * it.units / 100.0
                         }
                     }
-                    compositionNode.style.miterlimit.let {
-                        miterlimit = when (it) {
+                    compositionNode.style.miterLimit.let {
+                        miterLimit = when (it) {
                             is Numeric.Rational -> it.value
                         }
                     }

@@ -323,7 +323,7 @@ var DocumentStyle.preserveAspectRatio by PropertyDelegate<AspectRatio>(
 var Style.stroke by PropertyDelegate<Paint>(STROKE, INHERIT, Paint.None)
 var Style.strokeOpacity by PropertyDelegate<Numeric>(STROKE_OPACITY, INHERIT, Numeric.Rational(1.0))
 var Style.strokeWeight by PropertyDelegate<Length>(STROKE_WIDTH, INHERIT, 1.0.pixels)
-var Style.miterlimit by PropertyDelegate<Numeric>(STROKE_MITERLIMIT, INHERIT, Numeric.Rational(4.0))
+var Style.miterLimit by PropertyDelegate<Numeric>(STROKE_MITERLIMIT, INHERIT, Numeric.Rational(4.0))
 var Style.lineCap by PropertyDelegate<LineCap>(STROKE_LINECAP, INHERIT, LineCap.Butt)
 var Style.lineJoin by PropertyDelegate<LineJoin>(STROKE_LINEJOIN, INHERIT, LineJoin.Miter)
 
