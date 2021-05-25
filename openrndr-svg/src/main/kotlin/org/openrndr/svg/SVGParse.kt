@@ -15,7 +15,7 @@ internal sealed interface PropertyRegex {
 
     companion object {
         const val wsp = "(?:\\s|\\A|\\Z)+"
-        const val commaWsp = "(?:\\s*,?\\s+)"
+        const val commaWsp = "(?:\\s*,\\s*|\\s+)"
         const val align = "(?<align>[xy](?:Min|Mid|Max)[XY](?:Min|Mid|Max))*"
         const val meetOrSlice = "(?<meetOrSlice>meet|slice)*"
         const val unitIdentifier = "in|pc|pt|px|cm|mm|Q"
@@ -31,7 +31,7 @@ internal sealed interface PropertyRegex {
     }
 
     object NumberList : PropertyRegex {
-        override val regex = "(?:${Number.regex}$commaWsp)*${Number.regex}".toRegex()
+        override val regex = "(?:${Number.regex}$commaWsp${Number.regex}$commaWsp?)+".toRegex()
     }
 
     object Length : PropertyRegex {
