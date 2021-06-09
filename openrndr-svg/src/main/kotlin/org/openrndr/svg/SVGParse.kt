@@ -16,8 +16,8 @@ internal sealed interface PropertyRegex {
     companion object {
         const val wsp = "(?:\\s|\\A|\\Z)+"
         const val commaWsp = "(?:\\s*,\\s*|\\s+)"
-        const val align = "(?<align>[xy](?:Min|Mid|Max)[XY](?:Min|Mid|Max))*"
-        const val meetOrSlice = "(?<meetOrSlice>meet|slice)*"
+        const val align = "(?<align>[xy](?:Min|Mid|Max)[XY](?:Min|Mid|Max))?"
+        const val meetOrSlice = "(?<meetOrSlice>meet|slice)?"
         const val unitIdentifier = "in|pc|pt|px|cm|mm|Q"
         val opts = RegexOption.IGNORE_CASE
     }
@@ -47,7 +47,8 @@ internal sealed interface PropertyRegex {
     }
 
     object PreserveAspectRatio : PropertyRegex {
-        override val regex = "$wsp${align}$wsp${meetOrSlice}$wsp".toRegex(opts)
+        // We don't care for "defer", but if it's there, we'll ignore it.
+        override val regex = "$wsp(?:defer)?$wsp${align}$wsp${meetOrSlice}$wsp".toRegex(opts)
     }
 
     object RGBHex : PropertyRegex {
