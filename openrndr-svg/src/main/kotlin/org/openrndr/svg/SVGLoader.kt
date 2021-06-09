@@ -68,7 +68,6 @@ internal class SVGDocument(private val root: SVGSVGElement, val namespaces: Map<
         }
     }.apply {
         style::transform `=` svgElem.style.transform.value
-        // attributes.putAll(svgElem.attributes)
     }
 }
 

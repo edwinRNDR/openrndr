@@ -39,7 +39,7 @@ private fun Styleable.serialize(parentStyleable: Styleable? = null): String {
     val sb = StringBuilder()
 
     val filtered = this.properties.filter {
-        it.key != AttributeOrProperty.SHADESTYLE
+        it.key != AttributeOrPropertyKey.SHADESTYLE
     }
     // Inheritance can't be checked without a parentStyleable
     when (parentStyleable) {
