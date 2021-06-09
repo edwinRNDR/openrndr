@@ -5,7 +5,7 @@ package org.openrndr.shape
 import org.openrndr.color.*
 import org.openrndr.draw.*
 import org.openrndr.math.*
-import org.openrndr.shape.AttributeOrProperty.*
+import org.openrndr.shape.AttributeOrPropertyKey.*
 import org.openrndr.shape.Inheritance.*
 import kotlin.reflect.*
 
@@ -34,7 +34,7 @@ sealed interface Paint : AttributeOrPropertyValue {
     }
 
     object None : Paint {
-        override fun toString(): String = ""
+        override fun toString(): String = "none"
     }
 }
 
@@ -249,19 +249,18 @@ sealed interface ViewBox : AttributeOrPropertyValue {
     }
 
     object None : ViewBox {
-        // I think this is the proper behavior
-        override fun toString(): String = "0"
+        override fun toString(): String = ""
     }
 }
 
 private data class PropertyBehavior(val inherit: Inheritance, val initial: AttributeOrPropertyValue)
 
 private object PropertyBehaviors {
-    val behaviors = HashMap<AttributeOrProperty, PropertyBehavior>()
+    val behaviors = HashMap<AttributeOrPropertyKey, PropertyBehavior>()
 }
 
 private class PropertyDelegate<T : AttributeOrPropertyValue>(
-    val name: AttributeOrProperty,
+    val name: AttributeOrPropertyKey,
     inheritance: Inheritance,
     val initial: T
 ) {
@@ -282,11 +281,11 @@ private class PropertyDelegate<T : AttributeOrPropertyValue>(
 }
 
 sealed class Styleable {
-    val properties = HashMap<AttributeOrProperty, AttributeOrPropertyValue?>()
+    val properties = HashMap<AttributeOrPropertyKey, AttributeOrPropertyValue?>()
 
-    operator fun get(name: AttributeOrProperty) = properties[name]
+    operator fun get(name: AttributeOrPropertyKey) = properties[name]
 
-    operator fun set(name: AttributeOrProperty, value: AttributeOrPropertyValue?) {
+    operator fun set(name: AttributeOrPropertyKey, value: AttributeOrPropertyValue?) {
         properties[name] = value
     }
 
@@ -303,10 +302,10 @@ sealed class Styleable {
 
     // Because AttributeOrPropertyValue has a toString override,
     // we can abuse it for equality checks.
-    fun isInherited(from: Styleable, attribute: AttributeOrProperty): Boolean =
-        when (this.properties[attribute].toString()) {
-            from.properties[attribute].toString() -> true
-            PropertyBehaviors.behaviors[attribute]?.initial.toString() -> true
+    fun isInherited(from: Styleable, attributeKey: AttributeOrPropertyKey): Boolean =
+        when (this.properties[attributeKey].toString()) {
+            from.properties[attributeKey].toString() -> true
+            PropertyBehaviors.behaviors[attributeKey]?.initial.toString() -> true
             else -> false
         }
 }
@@ -345,7 +344,7 @@ var Style.height by PropertyDelegate<Length>(HEIGHT, RESET, 576.0.pixels)
 
 var Style.shadeStyle by PropertyDelegate<Shade>(SHADESTYLE, INHERIT, Shade.Value(ShadeStyle()))
 
-enum class AttributeOrProperty {
+enum class AttributeOrPropertyKey {
     // @formatter:off
     // Attributes
     BASE_PROFILE { override fun toString() = "baseProfile" },
