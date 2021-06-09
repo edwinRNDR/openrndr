@@ -11,15 +11,22 @@ import kotlin.reflect.*
  * Describes a node in a composition
  */
 sealed class CompositionNode {
-    /**
-     * node identifier
-     */
+
     var id: String? = null
 
     var parent: CompositionNode? = null
 
+    /** This CompositionNode's own style. */
     var style: Style = Style()
 
+    /**
+     * This CompositionNode's computed style.
+     * Where every style attribute is obtained by
+     * overwriting the Style in the following order:
+     * 1. Default style attributes.
+     * 2. Parent Node's computed style's inheritable attributes.
+     * 3. This Node's own style attributes.
+     */
     val computedStyle: Style
         get() = when (val p = parent) {
             is CompositionNode -> style inherit p.computedStyle
@@ -27,7 +34,7 @@ sealed class CompositionNode {
         }
 
     /**
-     * node attributes, these are used for loading and saving to SVG
+     * Custom attributes to be applied to the Node in addition to the Style attributes.
      */
     var attributes = mutableMapOf<String, String?>()
 
@@ -42,9 +49,7 @@ sealed class CompositionNode {
     abstract val bounds: Rectangle
 
     /**
-     * Calculates the total transformation of the current node.
-     * The result will be equivalent with the
-     * node's own transformation if it has no parent.
+     * Calculates the absolute transformation of the current node.
      */
     open val effectiveTransform: Matrix44
         get() = when (val p = parent) {
@@ -112,7 +117,7 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
             it.id = id
             it.parent = parent
             it.style = style.also { st ->
-                st.transform = Transform.Matrix(transform(this))
+                st::transform `=` transform(this)
             }
             it.attributes = attributes
         }
@@ -249,6 +254,10 @@ class Composition(val root: CompositionNode, var bounds: CompositionDimensions =
     val namespaces = mutableMapOf<String, String>()
 
     var style: Style = Style()
+
+    /**
+     * The style attributes affecting the whole document, such as the viewBox area and aspect ratio.
+     */
     var documentStyle: DocumentStyle = DocumentStyle()
 
     init {
@@ -276,13 +285,12 @@ class Composition(val root: CompositionNode, var bounds: CompositionDimensions =
 
     fun clear() = (root as? GroupNode)?.children?.clear()
 
-    // Swiped from the SVG spec for converting percentages to pixels within a Composition
-    internal fun normalizedDiagonalLength(): Double =
-        sqrt((bounds.dimensions.x).pow(2) + (bounds.dimensions.y).pow(2)) / 1.4142135623730951
+    /** Calculates the equivalent of `1%` in pixels. */
+    internal fun normalizedDiagonalLength(): Double = sqrt(bounds.dimensions.squaredLength / 2.0)
 
     /**
      * Calculates effective viewport transformation using [viewBox] and [preserveAspectRatio].
-     * As per [the SVG 2.0 spec](https://svgwg.org/svg2-draft/single-page.html#coords-ComputingAViewportsTransform)
+     * As per [the SVG 2.0 spec](https://svgwg.org/svg2-draft/single-page.html#coords-ComputingAViewportsTransform).
      */
     fun calculateViewportTransform(): Matrix44 {
         return when (documentStyle.viewBox) {
@@ -316,8 +324,8 @@ class Composition(val root: CompositionNode, var bounds: CompositionDimensions =
                         val translate = (eCorner - (vbCorner * scale)).let {
                             val cx = eDims.x - vbDims.x * scale.x
                             val cy = eDims.y - vbDims.y * scale.y
-                            val d = when (align) {
-                                // TODO! This first one probably doesn't comply with the spec
+                            it + when (align) {
+                                // TODO: This first one probably doesn't comply with the spec
                                 Align.NONE -> Vector2.ZERO
                                 Align.X_MIN_Y_MIN -> Vector2.ZERO
                                 Align.X_MID_Y_MIN -> Vector2(cx / 2, 0.0)
@@ -329,7 +337,6 @@ class Composition(val root: CompositionNode, var bounds: CompositionDimensions =
                                 Align.X_MID_Y_MAX -> Vector2(cx / 2, cy)
                                 Align.X_MAX_Y_MAX -> Vector2(cx, cy)
                             }
-                            it + d
                         }
 
                         buildTransform {
