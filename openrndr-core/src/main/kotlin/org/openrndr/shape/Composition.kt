@@ -27,11 +27,10 @@ sealed class CompositionNode {
      * 2. Parent Node's computed style's inheritable attributes.
      * 3. This Node's own style attributes.
      */
-    val computedStyle: Style
-        get() = when (val p = parent) {
-            is CompositionNode -> style inherit p.computedStyle
-            else -> style
-        }
+    val computedStyle: Style = when (val p = parent) {
+        is CompositionNode -> style inherit p.computedStyle
+        else -> style
+    }
 
     /**
      * Custom attributes to be applied to the Node in addition to the Style attributes.
@@ -56,6 +55,72 @@ sealed class CompositionNode {
             is CompositionNode -> style.transform.value * p.effectiveTransform
             else -> style.transform.value
         }
+
+    val effectiveStroke = computedStyle.stroke.value
+    val effectiveStrokeOpacity = computedStyle.strokeOpacity.value
+    val effectiveStrokeWeight = computedStyle.strokeWeight.value
+    val effectiveMiterLimit = computedStyle.miterLimit.value
+    val effectiveLineCap = computedStyle.lineCap.value
+    val effectiveLineJoin = computedStyle.lineJoin.value
+    val effectiveFill = computedStyle.fill.value
+    val effectiveFillOpacity = computedStyle.fillOpacity.value
+    val effectiveDisplay = computedStyle.display.value
+    val effectiveOpacity = computedStyle.opacity.value
+    val effectiveVisibility = computedStyle.visibility.value
+    val effectiveShadeStyle = computedStyle.shadeStyle.value
+
+    var stroke
+        get() = style.stroke.value
+        set(value) = run {
+            style.stroke = when (value) {
+                null -> Paint.None
+                else -> Paint.RGB(value)
+            }
+        }
+    var strokeOpacity
+        get() = style.strokeOpacity.value
+        set(value) = run { style.strokeOpacity = Numeric.Rational(value) }
+    var strokeWeight
+        get() = style.strokeWeight.value
+        set(value) = run { style.strokeWeight = Length.Pixels(value) }
+    var miterLimit
+        get() = style.miterLimit.value
+        set(value) = run { style.miterLimit = Numeric.Rational(value) }
+    var lineCap
+        get() = style.lineCap.value
+        set(value) = run {
+            style.lineCap = when (value) {
+                org.openrndr.draw.LineCap.BUTT -> LineCap.Butt
+                org.openrndr.draw.LineCap.ROUND -> LineCap.Round
+                org.openrndr.draw.LineCap.SQUARE -> LineCap.Square
+            }
+        }
+    var lineJoin
+        get() = style.lineJoin.value
+        set(value) = run {
+            style.lineJoin = when (value) {
+                org.openrndr.draw.LineJoin.BEVEL -> LineJoin.Bevel
+                org.openrndr.draw.LineJoin.MITER -> LineJoin.Miter
+                org.openrndr.draw.LineJoin.ROUND -> LineJoin.Round
+            }
+        }
+    var fill
+        get() = style.fill.value
+        set(value) = run {
+            style.fill = when (value) {
+                null -> Paint.None
+                else -> Paint.RGB(value)
+            }
+        }
+    var fillOpacity
+        get() = style.fillOpacity.value
+        set(value) = run { style.fillOpacity = Numeric.Rational(value) }
+    var opacity
+        get() = style.opacity.value
+        set(value) = run { style.opacity = Numeric.Rational(value) }
+    var shadeStyle
+        get() = style.shadeStyle.value
+        set(value) = run { style.shadeStyle = Shade.Value(value) }
 }
 
 infix fun KMutableProperty0<Paint>.`=`(color: ColorRGBa?) = this.set(when (color) {

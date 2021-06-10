@@ -45,6 +45,8 @@ sealed interface Paint : AttributeOrPropertyValue {
 }
 
 sealed interface Shade : AttributeOrPropertyValue {
+    override val value: ShadeStyle
+
     class Value(override val value: ShadeStyle) : Shade {
         override fun toString(): String = ""
     }
