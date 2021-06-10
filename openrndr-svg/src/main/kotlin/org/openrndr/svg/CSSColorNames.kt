@@ -1,7 +1,5 @@
 package org.openrndr.svg
 
-import org.openrndr.color.*
-
 /** Color name map as per the CSS Color Module Level 4 */
 internal val cssColorNames = mapOf(
     "aliceblue" to 0xf0f8ff,
