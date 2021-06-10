@@ -15,39 +15,45 @@ enum class Inheritance {
 }
 
 sealed interface AttributeOrPropertyValue {
+    val value: Any?
     override fun toString(): String
 }
 
 sealed interface Paint : AttributeOrPropertyValue {
-    class RGB(val color: ColorRGBa) : Paint {
+    override val value: ColorRGBa?
+
+    class RGB(override val value: ColorRGBa) : Paint {
         override fun toString(): String {
-            val ir = (color.r.coerceIn(0.0, 1.0) * 255.0).toInt()
-            val ig = (color.g.coerceIn(0.0, 1.0) * 255.0).toInt()
-            val ib = (color.b.coerceIn(0.0, 1.0) * 255.0).toInt()
+            val ir = (value.r.coerceIn(0.0, 1.0) * 255.0).toInt()
+            val ig = (value.g.coerceIn(0.0, 1.0) * 255.0).toInt()
+            val ib = (value.b.coerceIn(0.0, 1.0) * 255.0).toInt()
             return String.format("#%02x%02x%02x", ir, ig, ib)
         }
     }
 
     // This one is kept just in case, it's not handled in any way yet
     object CurrentColor : Paint {
+        override val value: ColorRGBa
+            get() = TODO("Not yet implemented")
         override fun toString(): String = "currentcolor"
     }
 
     object None : Paint {
+        override val value: ColorRGBa? = null
         override fun toString(): String = "none"
     }
 }
 
 sealed interface Shade : AttributeOrPropertyValue {
-    class Value(val shadeStyle: ShadeStyle) : Shade {
+    class Value(override val value: ShadeStyle) : Shade {
         override fun toString(): String = ""
     }
 }
 
 sealed interface Length : AttributeOrPropertyValue {
-    val units: Double
+    override val value: Double
 
-    class Pixels(override val units: Double) : Length {
+    class Pixels(override val value: Double) : Length {
         companion object {
             fun fromInches(value: Double) = Pixels(value * 96.0)
             fun fromPicas(value: Double) = Pixels(value * 16.0)
@@ -57,12 +63,12 @@ sealed interface Length : AttributeOrPropertyValue {
             fun fromQuarterMillimeters(value: Double) = Pixels(value * (96.0 / 101.6))
         }
 
-        override fun toString(): String = "$units"
+        override fun toString(): String = "$value"
     }
 
-    class Percent(override val units: Double) : Length {
+    class Percent(override val value: Double) : Length {
         override fun toString(): String {
-            return "${units}%"
+            return "${value}%"
         }
     }
 
@@ -83,7 +89,7 @@ inline val Double.percent: Length.Percent
     get() = Length.Percent(this)
 
 sealed interface Numeric : AttributeOrPropertyValue {
-    val value: Double
+    override val value: Double
 
     class Rational(override val value: Double) : Numeric {
         override fun toString(): String = "$value"
@@ -91,7 +97,7 @@ sealed interface Numeric : AttributeOrPropertyValue {
 }
 
 sealed interface Transform : AttributeOrPropertyValue {
-    val value: Matrix44
+    override val value: Matrix44
 
     class Matrix(override val value: Matrix44) : Transform {
         override fun toString(): String {
@@ -112,79 +118,79 @@ sealed interface Transform : AttributeOrPropertyValue {
 }
 
 sealed interface Visibility : AttributeOrPropertyValue {
-    val visible: Boolean
+    override val value: Boolean
 
     object Visible : Visibility {
-        override val visible = true
+        override val value = true
         override fun toString() = "visible"
     }
 
     object Hidden : Visibility {
-        override val visible = false
+        override val value = false
         override fun toString() = "hidden"
     }
 
     // This exists because the spec specifies so,
     // it is effectively Hidden.
     object Collapse : Visibility {
-        override val visible = false
+        override val value = false
         override fun toString() = "collapse"
     }
 }
 
 sealed interface Display : AttributeOrPropertyValue {
-    val visible: Boolean
+    override val value: Boolean
 
     object Inline : Display {
-        override val visible = true
+        override val value = true
         override fun toString() = "inline"
     }
 
     object Block : Display {
-        override val visible = true
+        override val value = true
         override fun toString() = "block"
     }
 
     object None : Display {
-        override val visible = false
+        override val value = false
         override fun toString() = "none"
     }
 }
 
 sealed interface LineCap : AttributeOrPropertyValue {
-    val cap: org.openrndr.draw.LineCap
+    override val value: org.openrndr.draw.LineCap
 
     object Round : LineCap {
-        override val cap = org.openrndr.draw.LineCap.ROUND
+        override val value = org.openrndr.draw.LineCap.ROUND
         override fun toString() = "round"
     }
 
     object Butt : LineCap {
-        override val cap = org.openrndr.draw.LineCap.BUTT
+        override val value = org.openrndr.draw.LineCap.BUTT
         override fun toString() = "butt"
     }
 
     object Square : LineCap {
-        override val cap = org.openrndr.draw.LineCap.SQUARE
+        override val value = org.openrndr.draw.LineCap.SQUARE
         override fun toString() = "square"
     }
 }
 
 sealed interface LineJoin : AttributeOrPropertyValue {
-    val join: org.openrndr.draw.LineJoin
+    override val value: org.openrndr.draw.LineJoin
 
     object Miter : LineJoin {
-        override val join = org.openrndr.draw.LineJoin.MITER
+        override val value = org.openrndr.draw.LineJoin.MITER
         override fun toString() = "miter"
     }
 
     object Bevel : LineJoin {
-        override val join = org.openrndr.draw.LineJoin.BEVEL
+        override val value = org.openrndr.draw.LineJoin.BEVEL
         override fun toString() = "bevel"
     }
 
     object Round : LineJoin {
-        override val join = org.openrndr.draw.LineJoin.ROUND
+        override val value = org.openrndr.draw.LineJoin.ROUND
         override fun toString() = "round"
     }
 }
@@ -208,6 +214,8 @@ enum class MeetOrSlice {
 }
 
 data class AspectRatio(val align: Align, val meetOrSlice: MeetOrSlice) : AttributeOrPropertyValue {
+    override val value = this
+
     companion object {
         val DEFAULT = AspectRatio(Align.X_MID_Y_MID, MeetOrSlice.MEET)
     }
@@ -239,16 +247,19 @@ data class AspectRatio(val align: Align, val meetOrSlice: MeetOrSlice) : Attribu
 }
 
 sealed interface ViewBox : AttributeOrPropertyValue {
-    class Value(val value: Rectangle) : ViewBox {
+    override val value: Rectangle?
+
+    class Value(override val value: Rectangle) : ViewBox {
         override fun toString(): String =
             "${value.x.toInt()} ${value.y.toInt()} ${value.width.toInt()} ${value.height.toInt()}"
     }
 
-    object Initial : ViewBox {
-        override fun toString(): String = ""
-    }
-
+    /**
+     * The viewBox has not been defined,
+     * **not** that it doesn't exist.
+     */
     object None : ViewBox {
+        override val value: Rectangle? = null
         override fun toString(): String = ""
     }
 }
@@ -270,9 +281,7 @@ private class PropertyDelegate<T : AttributeOrPropertyValue>(
 
     @Suppress("UNCHECKED_CAST")
     operator fun getValue(style: Styleable, property: KProperty<*>): T {
-        // This doesn't guarantee that there is no inherited value
         return (style[name] ?: PropertyBehaviors.behaviors[name]!!.initial) as T
-        // return style[name] as T?
     }
 
     operator fun setValue(style: Styleable, property: KProperty<*>, value: T?) {
@@ -313,7 +322,7 @@ sealed class Styleable {
 class DocumentStyle : Styleable()
 class Style : Styleable()
 
-var DocumentStyle.viewBox by PropertyDelegate<ViewBox>(VIEW_BOX, RESET, ViewBox.Initial)
+var DocumentStyle.viewBox by PropertyDelegate<ViewBox>(VIEW_BOX, RESET, ViewBox.None)
 var DocumentStyle.preserveAspectRatio by PropertyDelegate<AspectRatio>(
     PRESERVE_ASPECT_RATIO,
     RESET, AspectRatio.DEFAULT

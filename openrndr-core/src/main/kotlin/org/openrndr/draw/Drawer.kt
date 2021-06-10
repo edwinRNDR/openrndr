@@ -1078,14 +1078,14 @@ class Drawer(val driver: Driver) {
             pushStyle()
             model *= compositionNode.style.transform.value
 
-            shadeStyle = (compositionNode.style.shadeStyle as Shade.Value).shadeStyle
+            shadeStyle = (compositionNode.style.shadeStyle as Shade.Value).value
 
             when (compositionNode) {
                 is ShapeNode -> {
 
                     compositionNode.style.stroke.let {
                         stroke = when (it) {
-                            is Paint.RGB -> it.color
+                            is Paint.RGB -> it.value
                             Paint.None -> null
                             Paint.CurrentColor -> null
                         }
@@ -1097,8 +1097,8 @@ class Drawer(val driver: Driver) {
                     }
                     compositionNode.style.strokeWeight.let {
                         strokeWeight = when (it) {
-                            is Length.Pixels -> it.units
-                            is Length.Percent -> composition.normalizedDiagonalLength() * it.units / 100.0
+                            is Length.Pixels -> it.value
+                            is Length.Percent -> composition.normalizedDiagonalLength() * it.value / 100.0
                         }
                     }
                     compositionNode.style.miterLimit.let {
@@ -1107,14 +1107,14 @@ class Drawer(val driver: Driver) {
                         }
                     }
                     compositionNode.style.lineCap.let {
-                        lineCap = it.cap
+                        lineCap = it.value
                     }
                     compositionNode.style.lineJoin.let {
-                        lineJoin = it.join
+                        lineJoin = it.value
                     }
                     compositionNode.style.fill.let {
                         fill = when (it) {
-                            is Paint.RGB -> it.color
+                            is Paint.RGB -> it.value
                             is Paint.None -> null
                             is Paint.CurrentColor -> null
                         }

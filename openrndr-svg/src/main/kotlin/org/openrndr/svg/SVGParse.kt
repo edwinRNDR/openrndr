@@ -83,7 +83,7 @@ internal object SVGParse {
                 2 -> listOf(0.0, 0.0, list[0].toDouble(), list[1].toDouble())
                 3 -> listOf(0.0, list[0].toDouble(), list[1].toDouble(), list[2].toDouble())
                 4 -> list.map { item -> item.toDouble() }
-                else -> return ViewBox.Initial
+                else -> return ViewBox.None
             }
         }
 

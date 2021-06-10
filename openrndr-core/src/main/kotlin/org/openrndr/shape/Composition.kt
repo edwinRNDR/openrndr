@@ -214,8 +214,10 @@ open class GroupNode(open val children: MutableList<CompositionNode> = mutableLi
 }
 
 data class CompositionDimensions(val x: Length, val y: Length, val width: Length, val height: Length) {
-    val position = Vector2((x as Length.Pixels).units, (y as Length.Pixels).units)
-    val dimensions = Vector2((width as Length.Pixels).units, (height as Length.Pixels).units)
+    val position = Vector2((x as Length.Pixels).value, (y as Length.Pixels).value)
+    val dimensions = Vector2((width as Length.Pixels).value, (height as Length.Pixels).value)
+
+    // constructor(val rectangle: Rectangle): this(rectangle.corner.x, rectangle.corner.y, rectangle.dimensions.x, rectangle.dimensions.y)
 
     override fun toString(): String = "$x $y $width $height"
 
@@ -223,10 +225,10 @@ data class CompositionDimensions(val x: Length, val y: Length, val width: Length
     // but otherwise equality checks will never succeed
     override fun equals(other: Any?): Boolean {
         return other is CompositionDimensions
-            && x.units == other.x.units
-            && y.units == other.y.units
-            && width.units == other.width.units
-            && height.units == other.height.units
+            && x.value == other.x.value
+            && y.value == other.y.value
+            && width.value == other.width.value
+            && height.value == other.height.value
     }
 
     override fun hashCode(): Int {
@@ -294,8 +296,7 @@ class Composition(val root: CompositionNode, var bounds: CompositionDimensions =
      */
     fun calculateViewportTransform(): Matrix44 {
         return when (documentStyle.viewBox) {
-            ViewBox.Initial -> Matrix44.IDENTITY
-            ViewBox.None -> Matrix44.ZERO
+            ViewBox.None -> Matrix44.IDENTITY
             is ViewBox.Value -> {
                 when (val vb = (documentStyle.viewBox as ViewBox.Value).value) {
                     Rectangle.EMPTY -> {
@@ -307,7 +308,7 @@ class Composition(val root: CompositionNode, var bounds: CompositionDimensions =
                         val vbDims = vb.dimensions
                         val eCorner = bounds.position
                         val eDims = bounds.dimensions
-                        val (align, meetOrSlice) = documentStyle.preserveAspectRatio
+                        val (align, meetOrSlice) = documentStyle.preserveAspectRatio!!
 
                         val scale = (eDims / vbDims).let {
                             if (align != Align.NONE) {

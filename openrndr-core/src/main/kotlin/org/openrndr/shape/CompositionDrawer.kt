@@ -599,7 +599,7 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
 
                     cs.stroke.let {
                         stroke = when (it) {
-                            is Paint.RGB -> it.color
+                            is Paint.RGB -> it.value
                             Paint.None -> null
                             Paint.CurrentColor -> null
                         }
@@ -611,8 +611,8 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
                     }
                     cs.strokeWeight.let {
                         strokeWeight = when (it) {
-                            is Length.Pixels -> it.units
-                            is Length.Percent -> composition.normalizedDiagonalLength() * it.units / 100.0
+                            is Length.Pixels -> it.value
+                            is Length.Percent -> composition.normalizedDiagonalLength() * it.value / 100.0
                         }
                     }
                     cs.miterLimit.let {
@@ -621,14 +621,14 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
                         }
                     }
                     cs.lineCap.let {
-                        lineCap = it.cap
+                        lineCap = it.value
                     }
                     cs.lineJoin.let {
-                        lineJoin = it.join
+                        lineJoin = it.value
                     }
                     cs.fill.let {
                         fill = when (it) {
-                            is Paint.RGB -> it.color
+                            is Paint.RGB -> it.value
                             is Paint.None -> null
                             // TODO: This should grab the value of the `color` property in the CSS
                             // but that's so irrelevant in our case.

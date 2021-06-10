@@ -106,12 +106,12 @@ object TestSVGLoader : Spek({
         }
 
         it("has correctly parsed the functional RGB notation in fill") {
-            (shape0.style.fill as Paint.RGB).color `should be equal to` ColorRGBa(0.75, 0.14, 0.33)
+            (shape0.style.fill as Paint.RGB).value `should be equal to` ColorRGBa(0.75, 0.14, 0.33)
         }
 
         it("has correctly parsed various stroke properties") {
-            shape1.style.lineCap.cap `should be equal to` LineCap.ROUND
-            shape1.style.lineJoin.join `should be equal to` LineJoin.ROUND
+            shape1.style.lineCap.value `should be equal to` LineCap.ROUND
+            shape1.style.lineJoin.value `should be equal to` LineJoin.ROUND
             shape1.style.miterLimit.value `should be equal to` 50.0
         }
 
