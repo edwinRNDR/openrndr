@@ -282,7 +282,7 @@ data class CompositionDimensions(val x: Length, val y: Length, val width: Length
     val position = Vector2((x as Length.Pixels).value, (y as Length.Pixels).value)
     val dimensions = Vector2((width as Length.Pixels).value, (height as Length.Pixels).value)
 
-    // constructor(val rectangle: Rectangle): this(rectangle.corner.x, rectangle.corner.y, rectangle.dimensions.x, rectangle.dimensions.y)
+    constructor(rectangle: Rectangle): this(rectangle.corner.x.pixels, rectangle.corner.y.pixels, rectangle.dimensions.x.pixels, rectangle.dimensions.y.pixels)
 
     override fun toString(): String = "$x $y $width $height"
 

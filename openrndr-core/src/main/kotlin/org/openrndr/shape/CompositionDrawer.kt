@@ -742,6 +742,13 @@ fun Program.drawComposition(
         drawFunction: CompositionDrawer.() -> Unit
 ): Composition = CompositionDrawer(documentBounds, composition, cursor).apply { drawFunction() }.composition
 
+fun Program.drawComposition(
+    documentBounds: Rectangle,
+    composition: Composition? = null,
+    cursor: GroupNode? = composition?.root as? GroupNode,
+    drawFunction: CompositionDrawer.() -> Unit
+): Composition = CompositionDrawer(CompositionDimensions(documentBounds), composition, cursor).apply { drawFunction() }.composition
+
 fun drawComposition(
     documentBounds: CompositionDimensions = defaultCompositionDimensions,
     composition: Composition? = null,
