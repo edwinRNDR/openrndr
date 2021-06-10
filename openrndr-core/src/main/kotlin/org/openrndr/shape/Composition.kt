@@ -316,6 +316,7 @@ class GroupNodeStop(children: MutableList<CompositionNode>) : GroupNode(children
  * @param bounds the dimensions of the composition
  */
 class Composition(val root: CompositionNode, var bounds: CompositionDimensions = defaultCompositionDimensions) {
+    constructor(root: CompositionNode, bounds: Rectangle): this (root, CompositionDimensions(bounds))
 
     /** SVG/XML namespaces */
     val namespaces = mutableMapOf<String, String>()
