@@ -1,14 +1,14 @@
 package org.openrndr.math
 
 import org.amshove.kluent.*
+import org.openrndr.*
 import org.openrndr.color.*
 import org.openrndr.draw.LineCap
 import org.openrndr.draw.LineJoin
-import org.openrndr.resourceUrl
 import org.openrndr.shape.*
-import org.openrndr.svg.loadSVG
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
+import org.openrndr.svg.*
+import org.spekframework.spek2.*
+import org.spekframework.spek2.style.specification.*
 
 object TestSVGLoader : Spek({
 
@@ -106,19 +106,19 @@ object TestSVGLoader : Spek({
         }
 
         it("has correctly parsed the functional RGB notation in fill") {
-            (shape0.style.fill as Paint.RGB).value `should be equal to` ColorRGBa(0.75, 0.14, 0.33)
+            shape0.fill `should be equal to` ColorRGBa(0.75, 0.14, 0.33)
         }
 
         it("has correctly parsed various stroke properties") {
-            shape1.style.lineCap.value `should be equal to` LineCap.ROUND
-            shape1.style.lineJoin.value `should be equal to` LineJoin.ROUND
-            shape1.style.miterLimit.value `should be equal to` 50.0
+            shape1.lineCap `should be equal to` LineCap.ROUND
+            shape1.lineJoin `should be equal to` LineJoin.ROUND
+            shape1.miterLimit `should be equal to` 50.0
         }
 
         it("has correctly parsed the opacity properties") {
-            shape1.style.opacity.value `should be equal to` 0.8
-            shape1.style.strokeOpacity.value `should be equal to` 0.5
-            shape1.style.fillOpacity.value `should be equal to` 0.25
+            shape1.opacity `should be equal to` 0.8
+            shape1.strokeOpacity `should be equal to` 0.5
+            shape1.fillOpacity `should be equal to` 0.25
         }
     }
 })
