@@ -136,8 +136,6 @@ fun writeSVG(
     return sb.toString()
 }
 
-private val Matrix44.svgTransform get() = if (this == Matrix44.IDENTITY) null else "matrix(${this.c0r0}, ${this.c0r1}, ${this.c1r0}, ${this.c1r1}, ${this.c3r0}, ${this.c3r1})"
-
 private val Shape.svg: String
     get() {
         val sb = StringBuilder()
