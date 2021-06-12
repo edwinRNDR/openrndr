@@ -26,9 +26,9 @@ sealed class CompositionNode {
      * 2. Parent Node's computed style's inheritable attributes.
      * 3. This Node's own style attributes.
      */
-    val computedStyle: Style
+    val effectiveStyle: Style
         get() = when (val p = parent) {
-            is CompositionNode -> style inherit p.computedStyle
+            is CompositionNode -> style inherit p.effectiveStyle
             else -> style
         }
 
@@ -47,18 +47,18 @@ sealed class CompositionNode {
      */
     abstract val bounds: Rectangle
 
-    val effectiveStroke get() = computedStyle.stroke.value
-    val effectiveStrokeOpacity get() = computedStyle.strokeOpacity.value
-    val effectiveStrokeWeight get() = computedStyle.strokeWeight.value
-    val effectiveMiterLimit get() = computedStyle.miterLimit.value
-    val effectiveLineCap get() = computedStyle.lineCap.value
-    val effectiveLineJoin get() = computedStyle.lineJoin.value
-    val effectiveFill get() = computedStyle.fill.value
-    val effectiveFillOpacity get() = computedStyle.fillOpacity.value
-    val effectiveDisplay get() = computedStyle.display.value
-    val effectiveOpacity get() = computedStyle.opacity.value
-    val effectiveVisibility get() = computedStyle.visibility.value
-    val effectiveShadeStyle get() = computedStyle.shadeStyle.value
+    val effectiveStroke get() = effectiveStyle.stroke.value
+    val effectiveStrokeOpacity get() = effectiveStyle.strokeOpacity.value
+    val effectiveStrokeWeight get() = effectiveStyle.strokeWeight.value
+    val effectiveMiterLimit get() = effectiveStyle.miterLimit.value
+    val effectiveLineCap get() = effectiveStyle.lineCap.value
+    val effectiveLineJoin get() = effectiveStyle.lineJoin.value
+    val effectiveFill get() = effectiveStyle.fill.value
+    val effectiveFillOpacity get() = effectiveStyle.fillOpacity.value
+    val effectiveDisplay get() = effectiveStyle.display.value
+    val effectiveOpacity get() = effectiveStyle.opacity.value
+    val effectiveVisibility get() = effectiveStyle.visibility.value
+    val effectiveShadeStyle get() = effectiveStyle.shadeStyle.value
 
     /** Calculates the absolute transformation of the current node. */
     val effectiveTransform: Matrix44
@@ -175,7 +175,7 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
         return ShapeNode(shape.transform(transform(this))).also {
             it.id = id
             it.parent = parent
-            it.style = computedStyle
+            it.style = effectiveStyle
             it.attributes = attributes
         }
     }

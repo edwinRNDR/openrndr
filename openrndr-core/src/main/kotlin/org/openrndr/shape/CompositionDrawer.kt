@@ -595,7 +595,7 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
             // TODO: Handle Style.display
             when (compositionNode) {
                 is ShapeNode -> {
-                    val cs = compositionNode.computedStyle
+                    val cs = compositionNode.effectiveStyle
 
                     cs.stroke.let {
                         stroke = when (it) {
