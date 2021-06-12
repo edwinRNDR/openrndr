@@ -357,11 +357,11 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
 
                 val shapeTransform: Matrix44 = when (transformMode) {
                     TransformMode.KEEP -> {
-                        shapeNode.style::transform `=` model
+                        shapeNode.transform = model
                         Matrix44.IDENTITY
                     }
                     TransformMode.APPLY -> {
-                        shapeNode.style::transform `=` Matrix44.IDENTITY
+                        shapeNode.transform = Matrix44.IDENTITY
                         model
                     }
                 }
@@ -382,14 +382,14 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
                     }
                     else -> error("unreachable")
                 }
-                shapeNode.style::stroke `=` stroke
-                shapeNode.style::strokeOpacity `=` strokeOpacity
-                shapeNode.style::strokeWeight `=` strokeWeight
-                shapeNode.style::miterLimit `=` miterlimit
-                shapeNode.style::lineCap `=` lineCap
-                shapeNode.style::lineJoin `=` lineJoin
-                shapeNode.style::fill `=` fill
-                shapeNode.style::fillOpacity `=` fillOpacity
+                shapeNode.stroke = stroke
+                shapeNode.strokeOpacity = strokeOpacity
+                shapeNode.strokeWeight = strokeWeight
+                shapeNode.miterLimit = miterlimit
+                shapeNode.lineCap = lineCap
+                shapeNode.lineJoin = lineJoin
+                shapeNode.fill = fill
+                shapeNode.fillOpacity = fillOpacity
 
                 if (insert) {
                     cursor.children.add(shapeNode)
@@ -669,13 +669,13 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
     }
 
     fun CompositionNode.translate(x: Double, y: Double, z: Double = 0.0) {
-        style::transform `=` style.transform.value.transform {
+        transform = transform.transform {
             translate(x, y, z)
         }
     }
 
     fun CompositionNode.rotate(angleInDegrees: Double, pivot: Vector2 = Vector2.ZERO) {
-        style::transform `=` style.transform.value.transform {
+        transform = transform.transform {
             translate(pivot.xy0)
             rotate(Vector3.UNIT_Z, angleInDegrees)
             translate(-pivot.xy0)
@@ -683,7 +683,7 @@ class CompositionDrawer(documentBounds: CompositionDimensions = defaultCompositi
     }
 
     fun CompositionNode.scale(scale: Double, pivot: Vector2 = Vector2.ZERO) {
-        style::transform `=` style.transform.value.transform {
+        transform = transform.transform {
             translate(pivot.xy0)
             scale(scale, scale, scale)
             translate(-pivot.xy0)

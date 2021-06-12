@@ -1,6 +1,5 @@
 package org.openrndr.shape
 
-import org.openrndr.color.*
 import org.openrndr.draw.*
 import org.openrndr.math.*
 import org.openrndr.math.transforms.*
@@ -27,10 +26,11 @@ sealed class CompositionNode {
      * 2. Parent Node's computed style's inheritable attributes.
      * 3. This Node's own style attributes.
      */
-    val computedStyle: Style = when (val p = parent) {
-        is CompositionNode -> style inherit p.computedStyle
-        else -> style
-    }
+    val computedStyle: Style
+        get() = when (val p = parent) {
+            is CompositionNode -> style inherit p.computedStyle
+            else -> style
+        }
 
     /**
      * Custom attributes to be applied to the Node in addition to the Style attributes.
@@ -47,48 +47,46 @@ sealed class CompositionNode {
      */
     abstract val bounds: Rectangle
 
-    /**
-     * Calculates the absolute transformation of the current node.
-     */
-    open val effectiveTransform: Matrix44
-        get() = when (val p = parent) {
-            is CompositionNode -> style.transform.value * p.effectiveTransform
-            else -> style.transform.value
-        }
+    val effectiveStroke get() = computedStyle.stroke.value
+    val effectiveStrokeOpacity get() = computedStyle.strokeOpacity.value
+    val effectiveStrokeWeight get() = computedStyle.strokeWeight.value
+    val effectiveMiterLimit get() = computedStyle.miterLimit.value
+    val effectiveLineCap get() = computedStyle.lineCap.value
+    val effectiveLineJoin get() = computedStyle.lineJoin.value
+    val effectiveFill get() = computedStyle.fill.value
+    val effectiveFillOpacity get() = computedStyle.fillOpacity.value
+    val effectiveDisplay get() = computedStyle.display.value
+    val effectiveOpacity get() = computedStyle.opacity.value
+    val effectiveVisibility get() = computedStyle.visibility.value
+    val effectiveShadeStyle get() = computedStyle.shadeStyle.value
 
-    val effectiveStroke = computedStyle.stroke.value
-    val effectiveStrokeOpacity = computedStyle.strokeOpacity.value
-    val effectiveStrokeWeight = computedStyle.strokeWeight.value
-    val effectiveMiterLimit = computedStyle.miterLimit.value
-    val effectiveLineCap = computedStyle.lineCap.value
-    val effectiveLineJoin = computedStyle.lineJoin.value
-    val effectiveFill = computedStyle.fill.value
-    val effectiveFillOpacity = computedStyle.fillOpacity.value
-    val effectiveDisplay = computedStyle.display.value
-    val effectiveOpacity = computedStyle.opacity.value
-    val effectiveVisibility = computedStyle.visibility.value
-    val effectiveShadeStyle = computedStyle.shadeStyle.value
+    /** Calculates the absolute transformation of the current node. */
+    val effectiveTransform: Matrix44
+        get() = when (val p = parent) {
+            is CompositionNode -> transform * p.effectiveTransform
+            else -> transform
+        }
 
     var stroke
         get() = style.stroke.value
-        set(value) = run {
-            style.stroke = when (value) {
+        set(value) {
+            style.fill = when (value) {
                 null -> Paint.None
                 else -> Paint.RGB(value)
             }
         }
     var strokeOpacity
         get() = style.strokeOpacity.value
-        set(value) = run { style.strokeOpacity = Numeric.Rational(value) }
+        set(value) { style.strokeOpacity = Numeric.Rational(value) }
     var strokeWeight
         get() = style.strokeWeight.value
-        set(value) = run { style.strokeWeight = Length.Pixels(value) }
+        set(value) { style.strokeWeight = Length.Pixels(value) }
     var miterLimit
         get() = style.miterLimit.value
-        set(value) = run { style.miterLimit = Numeric.Rational(value) }
+        set(value) { style.miterLimit = Numeric.Rational(value) }
     var lineCap
         get() = style.lineCap.value
-        set(value) = run {
+        set(value) {
             style.lineCap = when (value) {
                 org.openrndr.draw.LineCap.BUTT -> LineCap.Butt
                 org.openrndr.draw.LineCap.ROUND -> LineCap.Round
@@ -97,7 +95,7 @@ sealed class CompositionNode {
         }
     var lineJoin
         get() = style.lineJoin.value
-        set(value) = run {
+        set(value) {
             style.lineJoin = when (value) {
                 org.openrndr.draw.LineJoin.BEVEL -> LineJoin.Bevel
                 org.openrndr.draw.LineJoin.MITER -> LineJoin.Miter
@@ -106,7 +104,7 @@ sealed class CompositionNode {
         }
     var fill
         get() = style.fill.value
-        set(value) = run {
+        set(value) {
             style.fill = when (value) {
                 null -> Paint.None
                 else -> Paint.RGB(value)
@@ -114,42 +112,25 @@ sealed class CompositionNode {
         }
     var fillOpacity
         get() = style.fillOpacity.value
-        set(value) = run { style.fillOpacity = Numeric.Rational(value) }
+        set(value) { style.fillOpacity = Numeric.Rational(value) }
     var opacity
         get() = style.opacity.value
-        set(value) = run { style.opacity = Numeric.Rational(value) }
+        set(value) { style.opacity = Numeric.Rational(value) }
     var shadeStyle
         get() = style.shadeStyle.value
-        set(value) = run { style.shadeStyle = Shade.Value(value) }
+        set(value) { style.shadeStyle = Shade.Value(value) }
+    var transform
+        get() = style.transform.value
+        set(value) { style.transform = Transform.Matrix(value) }
 }
 
-infix fun KMutableProperty0<Paint>.`=`(color: ColorRGBa?) = this.set(when (color) {
-    is ColorRGBa -> Paint.RGB(color)
-    else -> Paint.None
-})
-@JvmName("=Numeric")
-infix fun KMutableProperty0<Numeric>.`=`(value: Double) = this.set(Numeric.Rational(value))
-@JvmName("=Length")
-infix fun KMutableProperty0<Length>.`=`(value: Double) = this.set(Length.Pixels(value))
-infix fun KMutableProperty0<LineCap>.`=`(cap: org.openrndr.draw.LineCap) = this.set(when (cap) {
-    org.openrndr.draw.LineCap.SQUARE -> LineCap.Square
-    org.openrndr.draw.LineCap.BUTT -> LineCap.Butt
-    org.openrndr.draw.LineCap.ROUND -> LineCap.Round
-})
-infix fun KMutableProperty0<LineJoin>.`=`(join: org.openrndr.draw.LineJoin) = this.set(when (join) {
-    org.openrndr.draw.LineJoin.MITER -> LineJoin.Miter
-    org.openrndr.draw.LineJoin.BEVEL -> LineJoin.Bevel
-    org.openrndr.draw.LineJoin.ROUND -> LineJoin.Round
-})
-infix fun KMutableProperty0<Transform>.`=`(value: Matrix44): Unit = this.set(Transform.Matrix(value))
-
+// TODO: Deprecate this?
 operator fun KMutableProperty0<Shade>.setValue(thisRef: Style, property: KProperty<*>, value: ShadeStyle) {
     this.set(Shade.Value(value))
 }
 
 fun transform(node: CompositionNode): Matrix44 =
-    (node.parent?.let { transform(it) } ?: Matrix44.IDENTITY) * ((node.style.transform as? Transform.Matrix)?.value
-        ?: Matrix44.IDENTITY)
+    (node.parent?.let { transform(it) } ?: Matrix44.IDENTITY) * node.transform
 
 /**
  * a [CompositionNode] that holds a single image [ColorBuffer]
@@ -181,9 +162,8 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
         return ShapeNode(shape).also {
             it.id = id
             it.parent = parent
-            it.style = style.also { st ->
-                st::transform `=` transform(this)
-            }
+            it.style = style
+            it.transform = transform(this)
             it.attributes = attributes
         }
     }
@@ -316,7 +296,7 @@ class GroupNodeStop(children: MutableList<CompositionNode>) : GroupNode(children
  * @param bounds the dimensions of the composition
  */
 class Composition(val root: CompositionNode, var bounds: CompositionDimensions = defaultCompositionDimensions) {
-    constructor(root: CompositionNode, bounds: Rectangle): this (root, CompositionDimensions(bounds))
+    constructor(root: CompositionNode, bounds: Rectangle): this(root, CompositionDimensions(bounds))
 
     /** SVG/XML namespaces */
     val namespaces = mutableMapOf<String, String>()
