@@ -34,7 +34,7 @@ object TestSVGWriter : Spek({
             val svgString = comp.toSVG()
             val loaded = loadSVG(svgString)
             val shape = loaded.findShape("circle")
-            shape?.effectiveFill `should be equal to` ColorRGBa(1.0, 0.0, 0.0, 1.0, Linearity.UNKNOWN)
+            shape?.effectiveFill `should be equal to` ColorRGBa(1.0, 0.0, 0.0, 1.0, Linearity.SRGB)
             shape?.effectiveTransform?.get(3) `should be equal to` Vector4(50.0, 50.0, 0.0, 1.0)
         }
     }

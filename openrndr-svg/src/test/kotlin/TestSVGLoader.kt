@@ -106,7 +106,7 @@ object TestSVGLoader : Spek({
         }
 
         it("has correctly parsed the functional RGB notation in fill") {
-            shape0.fill `should be equal to` ColorRGBa(0.75, 0.14, 0.33)
+            shape0.fill `should be equal to` ColorRGBa(0.75, 0.14, 0.33, linearity = Linearity.SRGB)
         }
 
         it("has correctly parsed various stroke properties") {

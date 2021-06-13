@@ -452,7 +452,7 @@ internal object SVGParse {
                 val r = vi shr 16 and 0xff
                 val g = vi shr 8 and 0xff
                 val b = vi and 0xff
-                Paint.RGB(ColorRGBa(r / 255.0, g / 255.0, b / 255.0, 1.0))
+                Paint.RGB(ColorRGBa(r / 255.0, g / 255.0, b / 255.0, linearity = Linearity.SRGB))
             }
             col.startsWith("rgb(") -> rgbFunction(col)
             col in cssColorNames -> Paint.RGB(ColorRGBa.fromHex(cssColorNames[col]!!))
@@ -495,7 +495,7 @@ internal object SVGParse {
             .drop(1)
             .filter(String::isNotBlank)
             .map { it.toDouble().coerceIn(0.0..divisor) / divisor }
-        return Paint.RGB(ColorRGBa(r, g, b))
+        return Paint.RGB(ColorRGBa(r, g, b, linearity = Linearity.SRGB))
     }
 
     private fun expandToTwoDigitsPerComponent(hexValue: String) =
