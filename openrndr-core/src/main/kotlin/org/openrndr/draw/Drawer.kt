@@ -15,6 +15,9 @@ import org.openrndr.math.transforms.rotateZ
 import org.openrndr.math.transforms.scale
 import org.openrndr.math.transforms.translate
 import org.openrndr.shape.*
+import org.openrndr.shape.Paint
+import org.openrndr.shape.Rectangle
+import org.openrndr.shape.Shape
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
@@ -452,11 +455,28 @@ class Drawer(val driver: Driver) {
         get() = drawStyle.lineCap
 
 
+    /**
+     * The active line join method
+     * @see strokeWeight
+     * @see stroke
+     * @see lineCap
+     */
     var lineJoin: LineJoin
         set(value) {
             drawStyle.lineJoin = value
         }
         get() = drawStyle.lineJoin
+
+    /**
+     * When two line segments meet at a sharp angle and miter joins have been specified for [lineJoin],
+     * it is possible for the miter to extend far beyond the thickness of the line stroking the path.
+     * The miterlimit imposes a limit on the ratio of the miter length to the [strokeWeight].
+     */
+    var miterLimit: Double
+        set(value) {
+            drawStyle.miterLimit = value
+        }
+        get() = drawStyle.miterLimit
 
     /**
      * The active fontmap, default is null
@@ -1047,38 +1067,69 @@ class Drawer(val driver: Driver) {
      * @see shapes
      */
     fun composition(composition: Composition) {
+        pushModel()
         pushStyle()
-        fill = ColorRGBa.BLACK
-        stroke = null
+
+        // viewBox transformation
+        model *= composition.calculateViewportTransform()
 
         fun node(compositionNode: CompositionNode) {
             pushModel()
             pushStyle()
-            model *= compositionNode.transform
+            model *= compositionNode.style.transform.value
 
-            when (val s = compositionNode.shadeStyle) {
-                is CShadeStyle -> {
-                    shadeStyle = s.shadeStyle
-                }
-                else -> {
-                }
-            }
+            shadeStyle = (compositionNode.style.shadeStyle as Shade.Value).value
 
             when (compositionNode) {
                 is ShapeNode -> {
-                    compositionNode.fill.let {
-                        if (it is Color) {
-                            fill = it.color
+
+                    compositionNode.style.stroke.let {
+                        stroke = when (it) {
+                            is Paint.RGB -> it.value
+                            Paint.None -> null
+                            Paint.CurrentColor -> null
                         }
                     }
-                    compositionNode.stroke.let {
-                        if (it is Color) {
-                            stroke = it.color
+                    compositionNode.style.strokeOpacity.let {
+                        stroke = when (it) {
+                            is Numeric.Rational -> stroke?.opacify(it.value)
                         }
                     }
-                    compositionNode.strokeWeight.let {
-                        if (it is StrokeWeight) {
-                            strokeWeight = it.weight
+                    compositionNode.style.strokeWeight.let {
+                        strokeWeight = when (it) {
+                            is Length.Pixels -> it.value
+                            is Length.Percent -> composition.normalizedDiagonalLength() * it.value / 100.0
+                        }
+                    }
+                    compositionNode.style.miterLimit.let {
+                        miterLimit = when (it) {
+                            is Numeric.Rational -> it.value
+                        }
+                    }
+                    compositionNode.style.lineCap.let {
+                        lineCap = it.value
+                    }
+                    compositionNode.style.lineJoin.let {
+                        lineJoin = it.value
+                    }
+                    compositionNode.style.fill.let {
+                        fill = when (it) {
+                            is Paint.RGB -> it.value
+                            is Paint.None -> null
+                            is Paint.CurrentColor -> null
+                        }
+                    }
+                    compositionNode.style.fillOpacity.let {
+                        fill = when (it) {
+                            is Numeric.Rational -> fill?.opacify(it.value)
+                        }
+                    }
+                    compositionNode.style.opacity.let {
+                        when (it) {
+                            is Numeric.Rational -> {
+                                stroke = stroke?.opacify(it.value)
+                                fill = fill?.opacify(it.value)
+                            }
                         }
                     }
                     shape(compositionNode.shape)
@@ -1090,12 +1141,11 @@ class Drawer(val driver: Driver) {
                 is GroupNode -> compositionNode.children.forEach { node(it) }
             }
 
-
-
             popModel()
             popStyle()
         }
         node(composition.root)
+        popModel()
         popStyle()
     }
 
@@ -1128,7 +1178,6 @@ class Drawer(val driver: Driver) {
     fun image(colorBuffer: ColorBuffer, rectangles: List<Pair<Rectangle, Rectangle>>) {
         imageDrawer.drawImage(context, drawStyle, colorBuffer, rectangles)
     }
-
 
     /**
      * Draws an image using an ArrayTexture as source

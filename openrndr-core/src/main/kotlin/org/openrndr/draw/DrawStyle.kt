@@ -4,7 +4,7 @@ import mu.KotlinLogging
 import org.openrndr.color.ColorRGBa
 import org.openrndr.internal.Driver
 import org.openrndr.math.Matrix55
-import org.openrndr.shape.Rectangle
+import org.openrndr.shape.*
 
 private val logger = KotlinLogging.logger {}
 
@@ -400,7 +400,7 @@ data class DrawStyle(
 
     var strokeWeight: Double = 1.0,
     var smooth: Boolean = true,
-    var miterLimit: Double = 100.0,
+    var miterLimit: Double = 4.0,
 
     var quality: DrawQuality = DrawQuality.QUALITY,
 

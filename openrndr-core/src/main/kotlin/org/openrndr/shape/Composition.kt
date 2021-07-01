@@ -1,55 +1,41 @@
 package org.openrndr.shape
 
-import org.openrndr.color.ColorRGBa
-import org.openrndr.draw.ColorBuffer
-import org.openrndr.draw.ShadeStyle
-import org.openrndr.math.Matrix44
-import kotlin.reflect.KMutableProperty0
-import kotlin.reflect.KProperty
+import org.openrndr.draw.*
+import org.openrndr.math.*
+import org.openrndr.math.transforms.*
+import kotlin.math.*
+import kotlin.reflect.*
 
 /**
  * Describes a node in a composition
  */
 sealed class CompositionNode {
-    /**
-     * node identifier
-     */
+
     var id: String? = null
 
-    /**
-     * parent node
-     */
     var parent: CompositionNode? = null
 
-    /**
-     * local transform
-     */
-    open var transform = Matrix44.IDENTITY
+    /** This CompositionNode's own style. */
+    var style: Style = Style()
 
     /**
-     * cascading fill color
+     * This CompositionNode's computed style.
+     * Where every style attribute is obtained by
+     * overwriting the Style in the following order:
+     * 1. Default style attributes.
+     * 2. Parent Node's computed style's inheritable attributes.
+     * 3. This Node's own style attributes.
      */
-    var fill: CompositionColor = InheritColor
+    val effectiveStyle: Style
+        get() = when (val p = parent) {
+            is CompositionNode -> style inherit p.effectiveStyle
+            else -> style
+        }
 
     /**
-     * cascading stroke color
-     */
-    var stroke: CompositionColor = InheritColor
-
-    /**
-     * cascading stroke weight
-     */
-    var strokeWeight: CompositionStrokeWeight = InheritStrokeWeight
-
-    /**
-     * node attributes, these are used for loading and saving to SVG
+     * Custom attributes to be applied to the Node in addition to the Style attributes.
      */
     var attributes = mutableMapOf<String, String?>()
-
-    /**
-     * shadeStyle
-     */
-    var shadeStyle: CompositionShadeStyle = InheritShadeStyle
 
     /**
      * a map that stores user data
@@ -61,108 +47,96 @@ sealed class CompositionNode {
      */
     abstract val bounds: Rectangle
 
-    /**
-     * the effective [ShadeStyle] calculated from ancestor nodes and current node, null if no shade style
-     */
-    val effectiveShadeStyle: ShadeStyle?
-        get() {
-            return shadeStyle.let {
-                when (it) {
-                    is InheritShadeStyle -> parent?.effectiveShadeStyle
-                    is CShadeStyle -> it.shadeStyle
-                }
-            }
-        }
+    val effectiveStroke get() = effectiveStyle.stroke.value
+    val effectiveStrokeOpacity get() = effectiveStyle.strokeOpacity.value
+    val effectiveStrokeWeight get() = effectiveStyle.strokeWeight.value
+    val effectiveMiterLimit get() = effectiveStyle.miterLimit.value
+    val effectiveLineCap get() = effectiveStyle.lineCap.value
+    val effectiveLineJoin get() = effectiveStyle.lineJoin.value
+    val effectiveFill get() = effectiveStyle.fill.value
+    val effectiveFillOpacity get() = effectiveStyle.fillOpacity.value
+    val effectiveDisplay get() = effectiveStyle.display.value
+    val effectiveOpacity get() = effectiveStyle.opacity.value
+    val effectiveVisibility get() = effectiveStyle.visibility.value
+    val effectiveShadeStyle get() = effectiveStyle.shadeStyle.value
 
-    /**
-     * the effective stroke [ColorRGBa] calculated from ancestor nodes and current node, null if no stroke
-     */
-    val effectiveStroke: ColorRGBa?
-        get() {
-            return stroke.let {
-                when (it) {
-                    is InheritColor -> parent?.effectiveStroke
-                    is Color -> it.color
-                }
-            }
-        }
-
-    /**
-     * the effective stroke weight calculated from ancestor nodes and current node, null if no stroke
-     */
-    val effectiveStrokeWeight: Double?
-        get() {
-            return strokeWeight.let {
-                when (it) {
-                    is InheritStrokeWeight -> parent?.effectiveStrokeWeight
-                    is StrokeWeight -> it.weight
-                }
-            }
-        }
-
-
-    /**
-     * the effective fill [ColorRGBa] calculated from ancestor nodes and current node, null if no fill
-     */
-    val effectiveFill: ColorRGBa?
-        get() {
-            return fill.let {
-                when (it) {
-                    is InheritColor -> parent?.effectiveFill ?: ColorRGBa.BLACK
-                    is Color -> it.color
-                }
-            }
-        }
-
-    /**
-     * the effective transform [Matrix44] calculated from ancestor nodes and current node
-     */
+    /** Calculates the absolute transformation of the current node. */
     val effectiveTransform: Matrix44
-        get() {
-            return if (transform === Matrix44.IDENTITY) {
-                parent?.effectiveTransform ?: Matrix44.IDENTITY
-            } else {
-                transform * (parent?.effectiveTransform ?: Matrix44.IDENTITY)
+        get() = when (val p = parent) {
+            is CompositionNode -> transform * p.effectiveTransform
+            else -> transform
+        }
+
+    var stroke
+        get() = style.stroke.value
+        set(value) {
+            style.fill = when (value) {
+                null -> Paint.None
+                else -> Paint.RGB(value)
             }
         }
+    var strokeOpacity
+        get() = style.strokeOpacity.value
+        set(value) { style.strokeOpacity = Numeric.Rational(value) }
+    var strokeWeight
+        get() = style.strokeWeight.value
+        set(value) { style.strokeWeight = Length.Pixels(value) }
+    var miterLimit
+        get() = style.miterLimit.value
+        set(value) { style.miterLimit = Numeric.Rational(value) }
+    var lineCap
+        get() = style.lineCap.value
+        set(value) {
+            style.lineCap = when (value) {
+                org.openrndr.draw.LineCap.BUTT -> LineCap.Butt
+                org.openrndr.draw.LineCap.ROUND -> LineCap.Round
+                org.openrndr.draw.LineCap.SQUARE -> LineCap.Square
+            }
+        }
+    var lineJoin
+        get() = style.lineJoin.value
+        set(value) {
+            style.lineJoin = when (value) {
+                org.openrndr.draw.LineJoin.BEVEL -> LineJoin.Bevel
+                org.openrndr.draw.LineJoin.MITER -> LineJoin.Miter
+                org.openrndr.draw.LineJoin.ROUND -> LineJoin.Round
+            }
+        }
+    var fill
+        get() = style.fill.value
+        set(value) {
+            style.fill = when (value) {
+                null -> Paint.None
+                else -> Paint.RGB(value)
+            }
+        }
+    var fillOpacity
+        get() = style.fillOpacity.value
+        set(value) { style.fillOpacity = Numeric.Rational(value) }
+    var opacity
+        get() = style.opacity.value
+        set(value) { style.opacity = Numeric.Rational(value) }
+    var shadeStyle
+        get() = style.shadeStyle.value
+        set(value) { style.shadeStyle = Shade.Value(value) }
+    var transform
+        get() = style.transform.value
+        set(value) { style.transform = Transform.Matrix(value) }
 }
 
-infix fun KMutableProperty0<CompositionShadeStyle>.`=`(shadeStyle: ShadeStyle?) = this.set(CShadeStyle(shadeStyle))
-infix fun KMutableProperty0<CompositionColor>.`=`(color: ColorRGBa?) = this.set(Color(color))
-infix fun KMutableProperty0<CompositionStrokeWeight>.`=`(weight: Double) = this.set(StrokeWeight(weight))
-
-operator fun KMutableProperty0<CompositionShadeStyle>.setValue(thisRef: Any?, property: KProperty<*>, value: ShadeStyle) {
-    this.set(CShadeStyle(value))
+// TODO: Deprecate this?
+operator fun KMutableProperty0<Shade>.setValue(thisRef: Style, property: KProperty<*>, value: ShadeStyle) {
+    this.set(Shade.Value(value))
 }
 
-/**
- * cascading color for compositions
- */
-sealed class CompositionColor
-object InheritColor : CompositionColor()
-data class Color(val color: ColorRGBa?) : CompositionColor()
-
-/**
- * cascading shade styles for compositions
- */
-sealed class CompositionShadeStyle
-object InheritShadeStyle : CompositionShadeStyle()
-data class CShadeStyle(val shadeStyle: ShadeStyle?) : CompositionShadeStyle()
-
-/**
- * cascading stroke weight for compositions
- */
-sealed class CompositionStrokeWeight
-object InheritStrokeWeight : CompositionStrokeWeight()
-data class StrokeWeight(val weight: Double) : CompositionStrokeWeight()
-
-private fun transform(node: CompositionNode): Matrix44 =
-        (node.parent?.let { transform(it) } ?: Matrix44.IDENTITY) * node.transform
+fun transform(node: CompositionNode): Matrix44 =
+    (node.parent?.let { transform(it) } ?: Matrix44.IDENTITY) * node.transform
 
 /**
  * a [CompositionNode] that holds a single image [ColorBuffer]
  */
-class ImageNode(var image: ColorBuffer, var x: Double, var y: Double, var width: Double, var height: Double) : CompositionNode() {
+class ImageNode(var image: ColorBuffer, var x: Double, var y: Double, var width: Double, var height: Double) :
+    CompositionNode() {
     override val bounds: Rectangle
         get() = Rectangle(0.0, 0.0, width, height).contour.transform(transform(this)).bounds
 }
@@ -186,11 +160,11 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
      */
     fun conflate(): ShapeNode {
         return ShapeNode(shape).also {
-            it.fill = fill
-            it.stroke = stroke
-            it.strokeWeight = strokeWeight
-            it.transform = transform(this)
             it.id = id
+            it.parent = parent
+            it.style = style
+            it.transform = transform(this)
+            it.attributes = attributes
         }
     }
 
@@ -199,23 +173,25 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
      */
     fun flatten(): ShapeNode {
         return ShapeNode(shape.transform(transform(this))).also {
-            it.fill = Color(effectiveFill)
-            it.stroke = Color(effectiveStroke)
-            it.strokeWeight = StrokeWeight(effectiveStrokeWeight ?: 0.0)
-            it.transform = Matrix44.IDENTITY
             it.id = id
+            it.parent = parent
+            it.style = effectiveStyle
+            it.attributes = attributes
         }
     }
 
-    fun copy(id: String? = this.id, parent: CompositionNode? = null, transform: Matrix44 = this.transform, fill: CompositionColor = this.fill, stroke: CompositionColor = this.stroke, shape: Shape = this.shape): ShapeNode {
+    fun copy(
+        id: String? = this.id,
+        parent: CompositionNode? = null,
+        style: Style = this.style,
+        attributes: MutableMap<String, String?> = this.attributes,
+        shape: Shape = this.shape
+    ): ShapeNode {
         return ShapeNode(shape).also {
             it.id = id
             it.parent = parent
-            it.transform = transform
-            it.fill = fill
-            it.stroke = stroke
-            it.strokeWeight = strokeWeight
-            it.shape = shape
+            it.style = style
+            it.attributes = attributes
         }
     }
 
@@ -235,13 +211,13 @@ class ShapeNode(var shape: Shape) : CompositionNode() {
      */
     val effectiveShape
         get() = shape.transform(effectiveTransform)
-
 }
 
 /**
  * a [CompositionNode] that holds a single text
  */
 data class TextNode(var text: String, var contour: ShapeContour?) : CompositionNode() {
+    // TODO: This should not be Rectangle.EMPTY
     override val bounds: Rectangle
         get() = Rectangle.EMPTY
 }
@@ -249,20 +225,23 @@ data class TextNode(var text: String, var contour: ShapeContour?) : CompositionN
 /**
  * A [CompositionNode] that functions as a group node
  */
-open class GroupNode(val children: MutableList<CompositionNode> = mutableListOf()) : CompositionNode() {
+open class GroupNode(open val children: MutableList<CompositionNode> = mutableListOf()) : CompositionNode() {
     override val bounds: Rectangle
         get() {
-            val b = rectangleBounds(children.map { it.bounds })
-            return b
+            return children.map { it.bounds }.bounds
         }
 
-    fun copy(id: String? = this.id, parent: CompositionNode? = null, transform: Matrix44 = this.transform, fill: CompositionColor = this.fill, stroke: CompositionColor = this.stroke, children: MutableList<CompositionNode> = this.children): GroupNode {
+    fun copy(
+        id: String? = this.id,
+        parent: CompositionNode? = null,
+        style: Style = this.style,
+        children: MutableList<CompositionNode> = this.children
+    ): GroupNode {
         return GroupNode(children).also {
             it.id = id
             it.parent = parent
-            it.transform = transform
-            it.fill = fill
-            it.stroke = stroke
+            it.style = style
+            it.attributes = attributes
         }
     }
 
@@ -277,13 +256,36 @@ open class GroupNode(val children: MutableList<CompositionNode> = mutableListOf(
     override fun hashCode(): Int {
         return children.hashCode()
     }
-
 }
 
-/**
- * default composition bounds
- */
-val DefaultCompositionBounds = Rectangle(0.0, 0.0, 2676.0, 2048.0)
+data class CompositionDimensions(val x: Length, val y: Length, val width: Length, val height: Length) {
+    val position = Vector2((x as Length.Pixels).value, (y as Length.Pixels).value)
+    val dimensions = Vector2((width as Length.Pixels).value, (height as Length.Pixels).value)
+
+    constructor(rectangle: Rectangle): this(rectangle.corner.x.pixels, rectangle.corner.y.pixels, rectangle.dimensions.x.pixels, rectangle.dimensions.y.pixels)
+
+    override fun toString(): String = "$x $y $width $height"
+
+    // I'm not entirely sure why this is needed but
+    // but otherwise equality checks will never succeed
+    override fun equals(other: Any?): Boolean {
+        return other is CompositionDimensions
+            && x.value == other.x.value
+            && y.value == other.y.value
+            && width.value == other.width.value
+            && height.value == other.height.value
+    }
+
+    override fun hashCode(): Int {
+        var result = x.hashCode()
+        result = 31 * result + y.hashCode()
+        result = 31 * result + width.hashCode()
+        result = 31 * result + height.hashCode()
+        return result
+    }
+}
+
+val defaultCompositionDimensions = CompositionDimensions(0.0.pixels, 0.0.pixels, 768.0.pixels, 576.0.pixels)
 
 @Deprecated("complicated semantics")
 class GroupNodeStop(children: MutableList<CompositionNode>) : GroupNode(children)
@@ -291,13 +293,28 @@ class GroupNodeStop(children: MutableList<CompositionNode>) : GroupNode(children
 /**
  * A vector composition.
  * @param root the root node of the composition
- * @param documentBounds the document bounds [Rectangle] of the composition, serves as a hint only
+ * @param bounds the dimensions of the composition
  */
-class Composition(val root: CompositionNode, var documentBounds: Rectangle = DefaultCompositionBounds) {
-    /**
-     * svg/xml namespaces
-     */
+class Composition(val root: CompositionNode, var bounds: CompositionDimensions = defaultCompositionDimensions) {
+    constructor(root: CompositionNode, bounds: Rectangle): this(root, CompositionDimensions(bounds))
+
+    /** SVG/XML namespaces */
     val namespaces = mutableMapOf<String, String>()
+
+    var style: Style = Style()
+
+    /**
+     * The style attributes affecting the whole document, such as the viewBox area and aspect ratio.
+     */
+    var documentStyle: DocumentStyle = DocumentStyle()
+
+    init {
+        val (x, y, width, height) = bounds
+        style.x = x
+        style.y = y
+        style.width = width
+        style.height = height
+    }
 
     fun findShapes() = root.findShapes()
     fun findShape(id: String): ShapeNode? {
@@ -315,6 +332,69 @@ class Composition(val root: CompositionNode, var documentBounds: Rectangle = Def
     }
 
     fun clear() = (root as? GroupNode)?.children?.clear()
+
+    /** Calculates the equivalent of `1%` in pixels. */
+    internal fun normalizedDiagonalLength(): Double = sqrt(bounds.dimensions.squaredLength / 2.0)
+
+    /**
+     * Calculates effective viewport transformation using [viewBox] and [preserveAspectRatio].
+     * As per [the SVG 2.0 spec](https://svgwg.org/svg2-draft/single-page.html#coords-ComputingAViewportsTransform).
+     */
+    fun calculateViewportTransform(): Matrix44 {
+        return when (documentStyle.viewBox) {
+            ViewBox.None -> Matrix44.IDENTITY
+            is ViewBox.Value -> {
+                when (val vb = (documentStyle.viewBox as ViewBox.Value).value) {
+                    Rectangle.EMPTY -> {
+                        // The intent is to not display the element
+                        Matrix44.ZERO
+                    }
+                    else -> {
+                        val vbCorner = vb.corner
+                        val vbDims = vb.dimensions
+                        val eCorner = bounds.position
+                        val eDims = bounds.dimensions
+                        val (align, meetOrSlice) = documentStyle.preserveAspectRatio!!
+
+                        val scale = (eDims / vbDims).let {
+                            if (align != Align.NONE) {
+                                if (meetOrSlice == MeetOrSlice.MEET) {
+                                    Vector2(min(it.x, it.y))
+                                } else {
+                                    Vector2(max(it.x, it.y))
+                                }
+                            } else {
+                                it
+                            }
+                        }
+
+                        val translate = (eCorner - (vbCorner * scale)).let {
+                            val cx = eDims.x - vbDims.x * scale.x
+                            val cy = eDims.y - vbDims.y * scale.y
+                            it + when (align) {
+                                // TODO: This first one probably doesn't comply with the spec
+                                Align.NONE -> Vector2.ZERO
+                                Align.X_MIN_Y_MIN -> Vector2.ZERO
+                                Align.X_MID_Y_MIN -> Vector2(cx / 2, 0.0)
+                                Align.X_MAX_Y_MIN -> Vector2(cx, 0.0)
+                                Align.X_MIN_Y_MID -> Vector2(0.0, cy / 2)
+                                Align.X_MID_Y_MID -> Vector2(cx / 2, cy / 2)
+                                Align.X_MAX_Y_MID -> Vector2(cx, cy / 2)
+                                Align.X_MIN_Y_MAX -> Vector2(0.0, cy)
+                                Align.X_MID_Y_MAX -> Vector2(cx / 2, cy)
+                                Align.X_MAX_Y_MAX -> Vector2(cx, cy)
+                            }
+                        }
+
+                        buildTransform {
+                            translate(translate)
+                            scale(scale.x, scale.y, 1.0)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -395,9 +475,9 @@ fun CompositionNode.visitAll(visitor: (CompositionNode.() -> Unit)) {
  * UserData delegate
  */
 class UserData<T : Any>(
-        val name: String, val initial: T
+    val name: String, val initial: T
 ) {
-    @Suppress("USELESS_CAST", "UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST")
     operator fun getValue(node: CompositionNode, property: KProperty<*>): T {
         val value: T? = node.userData[name] as? T
         return value ?: initial
