@@ -1,0 +1,32 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:org.openrndr.animatable/DefaultClock/time/#/PointingToDeclaration/openrndr-animatable/org.openrndr.animatable/-default-clock/[jvm]time.html
+$dokka.location:org.openrndr.animatable/DefaultClock/timeNanos/#/PointingToDeclaration/openrndr-animatable/org.openrndr.animatable/-default-clock/[jvm]time-nanos.html
+$dokka.location:org.openrndr.events/Event/name/#/PointingToDeclaration/openrndr-event/org.openrndr.events/-event/[jvm]name.html
+$dokka.location:org.openrndr.events/Event/postpone/#/PointingToDeclaration/openrndr-event/org.openrndr.events/-event/[jvm]postpone.html
+module:openrndr-animatable
+org.openrndr.animatable
+org.openrndr.animatable.easing
+module:openrndr-color
+org.openrndr.color
+module:openrndr-dds
+org.openrndr.dds
+module:openrndr-draw
+org.openrndr.draw
+org.openrndr.internal
+org.openrndr.shape
+module:openrndr-event
+org.openrndr.events
+module:openrndr-filter
+org.openrndr.filter
+org.openrndr.filter.color
+module:openrndr-math
+org.openrndr.math
+org.openrndr.math.transforms
+module:openrndr-shape
+org.openrndr.shape
+module:openrndr-utils
+org.openrndr.collections
+org.openrndr.utils
+org.openrndr.utils.buffer
+org.openrndr.utils.url

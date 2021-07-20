@@ -1,0 +1,197 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>CatmulRom2</title>
+</head><body><link href="../../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script><script type="text/javascript" src="../../../scripts/main.js" async></script>
+  
+    <div id="container">
+      <div id="leftColumn"><a href="../../../index.html">
+            <div id="logo"></div>
+          </a>
+        <div id="paneSearch"></div>
+        <div id="sideMenu"></div>
+      </div>
+      <div id="main">
+        <script type="text/javascript" src="../../../scripts/main.js"></script><div id="leftToggler"><span class="icon-toggler"></span></div>
+
+        <div class="main-content" id="content" pageids="openrndr-math::org.openrndr.math/CatmulRom2///PointingToDeclaration//-606767324">
+          <div class="navigation-wrapper" id="navigation-wrapper">
+            <div class="breadcrumbs"><a href="../../index.html">openrndr-math</a>/<a href="../index.html">org.openrndr.math</a>/<a href="index.html">CatmulRom2</a></div>
+            <div class="pull-right d-flex">
+              <div id="searchBar"></div>
+            </div>
+          </div>
+          <div class="cover ">
+            <h1 class="cover"><span>Catmul</span><wbr><span>Rom2</span></h1>
+            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><div class="symbol monospace">class <a href="index.html">CatmulRom2</a>(p0: <a href="../-vector2/index.html">Vector2</a>, p1: <a href="../-vector2/index.html">Vector2</a>, p2: <a href="../-vector2/index.html">Vector2</a>, p3: <a href="../-vector2/index.html">Vector2</a>, alpha: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Creates a 2D Catmull-Rom spline curve.</p><p class="paragraph">Can be represented as a segment drawn between <a href="p1.html">p1</a> and <a href="p2.html">p2</a>, while <a href="p0.html">p0</a> and <a href="p3.html">p3</a> are used as control points.</p><p class="paragraph">Under some circumstances alpha can have no perceptible effect, for example, when creating closed shapes with the vertices forming a regular 2D polygon.</p></div></div>
+          </div>
+          <div class="tabbedcontent">
+            <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Constructors">Constructors</button><button class="section-tab" data-togglable="Functions">Functions</button><button class="section-tab" data-togglable="Properties">Properties</button><button class="section-tab" data-togglable="Parameters">Parameters</button></div>
+            <div class="tabs-section-body">
+              <h2 class="">Parameters</h2>
+              <div data-togglable="Parameters">
+                <div class="platform-hinted WithExtraAttributes" data-platform-hinted="data-platform-hinted" data-togglable="Parameters"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><div data-togglable="Parameters"><div class="table" data-togglable="Parameters"><div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex">p0</span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">The first control point.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex">p1</span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">The starting anchor point.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex">p2</span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">The ending anchor point.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex">p3</span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">The second control point.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex">alpha</span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">The tension of the curve.     Use <code>0.0</code> for the uniform spline, <code>0.5</code> for the centripetal spline, <code>1.0</code> for the chordal spline.</p></div></div></div></div></div></div></div></div></div>
+              </div>
+              <h2 class="tabbedcontent">Constructors</h2>
+              <div class="table" data-togglable="Constructors"><a data-name="656087559%2FConstructors%2F-606767324" anchor-label="CatmulRom2" id="656087559%2FConstructors%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>
+                <div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain">
+                  <div class="main-subrow keyValue TabbedContent">
+                    <div class=""><span class="inline-flex"><a href="-catmul-rom2.html">CatmulRom2</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="656087559%2FConstructors%2F-606767324"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><div class="symbol monospace">fun <a href="-catmul-rom2.html">CatmulRom2</a>(p0: <a href="../-vector2/index.html">Vector2</a>, p1: <a href="../-vector2/index.html">Vector2</a>, p2: <a href="../-vector2/index.html">Vector2</a>, p3: <a href="../-vector2/index.html">Vector2</a>, alpha: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a> = 0.5)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief ">The first control point.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Functions</h2>
+              <div class="table" data-togglable="Functions"><a data-name="989688824%2FFunctions%2F-606767324" anchor-label="position" id="989688824%2FFunctions%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>
+                <div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="position.html">position</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="989688824%2FFunctions%2F-606767324"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><div class="symbol monospace">fun <a href="position.html">position</a>(rt: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>): <a href="../-vector2/index.html">Vector2</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+</div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Properties</h2>
+              <div class="table" data-togglable="Properties"><a data-name="1234867463%2FProperties%2F-606767324" anchor-label="alpha" id="1234867463%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>
+                <div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="alpha.html">alpha</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1234867463%2FProperties%2F-606767324"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><a data-name="1234867463%2FProperties%2F-606767324" anchor-label="alpha" id="1234867463%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace">val <a href="alpha.html">alpha</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a> = 0.5<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1234867463%2FProperties%2F-606767324" anchor-label="alpha" id="1234867463%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>The tension of the curve.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-724895211%2FProperties%2F-606767324" anchor-label="p0" id="-724895211%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>
+                <div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="p0.html">p0</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-724895211%2FProperties%2F-606767324"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><a data-name="-724895211%2FProperties%2F-606767324" anchor-label="p0" id="-724895211%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace">val <a href="p0.html">p0</a>: <a href="../-vector2/index.html">Vector2</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-724895211%2FProperties%2F-606767324" anchor-label="p0" id="-724895211%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>The first control point.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-693875404%2FProperties%2F-606767324" anchor-label="p1" id="-693875404%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>
+                <div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="p1.html">p1</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-693875404%2FProperties%2F-606767324"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><a data-name="-693875404%2FProperties%2F-606767324" anchor-label="p1" id="-693875404%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace">val <a href="p1.html">p1</a>: <a href="../-vector2/index.html">Vector2</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-693875404%2FProperties%2F-606767324" anchor-label="p1" id="-693875404%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>The starting anchor point.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-662855597%2FProperties%2F-606767324" anchor-label="p2" id="-662855597%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>
+                <div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="p2.html">p2</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-662855597%2FProperties%2F-606767324"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><a data-name="-662855597%2FProperties%2F-606767324" anchor-label="p2" id="-662855597%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace">val <a href="p2.html">p2</a>: <a href="../-vector2/index.html">Vector2</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-662855597%2FProperties%2F-606767324" anchor-label="p2" id="-662855597%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>The ending anchor point.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-631835790%2FProperties%2F-606767324" anchor-label="p3" id="-631835790%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>
+                <div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="p3.html">p3</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-631835790%2FProperties%2F-606767324"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><a data-name="-631835790%2FProperties%2F-606767324" anchor-label="p3" id="-631835790%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace">val <a href="p3.html">p3</a>: <a href="../-vector2/index.html">Vector2</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-631835790%2FProperties%2F-606767324" anchor-label="p3" id="-631835790%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>The second control point.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1173406439%2FProperties%2F-606767324" anchor-label="t0" id="-1173406439%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>
+                <div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="t0.html">t0</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1173406439%2FProperties%2F-606767324"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><a data-name="-1173406439%2FProperties%2F-606767324" anchor-label="t0" id="-1173406439%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace">val <a href="t0.html">t0</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a> = 0.0<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1173406439%2FProperties%2F-606767324" anchor-label="t0" id="-1173406439%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>Value of t for p0.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1142386632%2FProperties%2F-606767324" anchor-label="t1" id="-1142386632%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>
+                <div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="t1.html">t1</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1142386632%2FProperties%2F-606767324"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><a data-name="-1142386632%2FProperties%2F-606767324" anchor-label="t1" id="-1142386632%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace">val <a href="t1.html">t1</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1142386632%2FProperties%2F-606767324" anchor-label="t1" id="-1142386632%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>Value of t for p1.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1111366825%2FProperties%2F-606767324" anchor-label="t2" id="-1111366825%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>
+                <div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="t2.html">t2</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1111366825%2FProperties%2F-606767324"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><a data-name="-1111366825%2FProperties%2F-606767324" anchor-label="t2" id="-1111366825%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace">val <a href="t2.html">t2</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1111366825%2FProperties%2F-606767324" anchor-label="t2" id="-1111366825%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>Value of t for p2.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1080347018%2FProperties%2F-606767324" anchor-label="t3" id="-1080347018%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>
+                <div class="table-row" data-filterable-current=":openrndr-math:dokkaHtmlPartial/commonMain" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="t3.html">t3</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1080347018%2FProperties%2F-606767324"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":openrndr-math:dokkaHtmlPartial/commonMain"><a data-name="-1080347018%2FProperties%2F-606767324" anchor-label="t3" id="-1080347018%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace">val <a href="t3.html">t3</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1080347018%2FProperties%2F-606767324" anchor-label="t3" id="-1080347018%2FProperties%2F-606767324" data-filterable-set=":openrndr-math:dokkaHtmlPartial/commonMain"></a>Value of t for p3.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2021 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+      </div>
+    </div>
+  
+</body></html>
+
+
